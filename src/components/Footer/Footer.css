@@ -1,0 +1,37 @@
+.main-footer {
+  margin-top: auto;
+  padding: 20px 40px;
+  border-top: 2px solid var(--neon-magenta);
+  background: linear-gradient(0deg, var(--bg-purple) 0%, var(--bg-dark) 100%);
+  text-align: center;
+}
+
+.footer-content {
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.footer-divider {
+  color: var(--neon-magenta);
+}
+
+.footer-decoration {
+  margin-top: 15px;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--neon-cyan),
+    var(--neon-magenta),
+    var(--neon-yellow),
+    var(--neon-magenta),
+    var(--neon-cyan),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: gradient-flow 3s linear infinite;
+}

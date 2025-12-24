@@ -6,7 +6,6 @@ const TRACK_URL = '/ambient.mp3';
 
 const MusicPlayer = () => {
   const [isMuted, setIsMuted] = useState(true);
-  const [isLoaded, setIsLoaded] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -15,10 +14,6 @@ const MusicPlayer = () => {
     audio.loop = true;
     audio.volume = 0.25;
     
-    audio.addEventListener('canplaythrough', () => {
-      setIsLoaded(true);
-    });
-
     audioRef.current = audio;
 
     return () => {

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { foundationReports, getFoundationSummary } from '../../data/foundationReports';
-import { TransparencyReport } from '../../types/foundation';
 import { formatCurrency, formatAlgo, formatCompact } from '../../utils/formatters';
 import { balanceSheetData, reportColumns, getOldStructureTotal, getNewStructureTotal } from '../../data/balanceSheetData';
 import { outflowsData, outflowReportColumns, getCategoryTotal } from '../../data/outflowsData';
 import { fiatExpenseData, fiatReportColumns, formatUSD } from '../../data/fiatExpenseData';
 import { loansData, statusColors } from '../../data/loansData';
 import { poolTrackingData, getPoolTrackingSummary } from '../../data/poolTrackingData';
-import { redFlags, yellowFlags, greenFlags, lowFlags, flagStats, severityColors, flagsData, Severity } from '../../data/flagsData';
+import { flagStats, severityColors, flagsData, Severity } from '../../data/flagsData';
 import { keyObservationsData } from '../../data/keyObservationsData';
 import ChartBuilder from '../../components/ChartBuilder/ChartBuilder';
 import './Foundation.css';

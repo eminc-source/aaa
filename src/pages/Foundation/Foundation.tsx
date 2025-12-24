@@ -21,7 +21,31 @@ const Foundation: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [flagSortColumn, setFlagSortColumn] = useState<'issueNum' | 'category' | 'severity'>('severity');
   const [flagSortDirection, setFlagSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [reportSortDirection, setReportSortDirection] = useState<'asc' | 'desc'>('desc'); // desc = newest first
   const summary = getFoundationSummary();
+
+  // Sort reports by date
+  const sortedReports = [...foundationReports].sort((a, b) => {
+    // Parse dates like "Mar 2020", "Jul 2019", etc.
+    const parseDate = (dateStr: string): Date => {
+      const months: Record<string, number> = {
+        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+      };
+      const parts = dateStr.split(' ');
+      const month = months[parts[0]] || 0;
+      const year = parseInt(parts[1]) || 2019;
+      return new Date(year, month);
+    };
+    const dateA = parseDate(a.reportDate);
+    const dateB = parseDate(b.reportDate);
+    const comparison = dateA.getTime() - dateB.getTime();
+    return reportSortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  const toggleReportSort = () => {
+    setReportSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
 
   // Sort flags
   const severityOrder: Record<Severity, number> = { 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'RESOLVED': 4 };
@@ -182,7 +206,9 @@ const Foundation: React.FC = () => {
                     <th className="col-report">#</th>
                     <th className="col-period">PERIOD</th>
                     <th className="col-duration">DURATION</th>
-                    <th className="col-date">REPORT DATE</th>
+                    <th className="col-date sortable" onClick={toggleReportSort} style={{ cursor: 'pointer' }}>
+                      REPORT DATE {reportSortDirection === 'desc' ? '▼' : '▲'}
+                    </th>
                     <th className="col-algo">ALGO DISTRIBUTED</th>
                     <th className="col-fiat">FIAT (USD)</th>
                     <th className="col-balance">BALANCE SHEET?</th>
@@ -190,7 +216,7 @@ const Foundation: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {foundationReports.map((report) => (
+                  {sortedReports.map((report) => (
                     <React.Fragment key={report.reportNumber}>
                       <tr 
                         className={`report-row ${report.details ? 'expandable' : ''} ${expandedRows.has(report.reportNumber) ? 'expanded' : ''}`}

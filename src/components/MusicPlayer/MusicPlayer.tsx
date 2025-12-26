@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import './MusicPlayer.css';
 
-// Local ambient track
-const TRACK_URL = '/ambient.mp3';
+// Local synthwave track
+const TRACK_URL = '/synthwave-139501.mp3';
 
 const MusicPlayer = () => {
   const [isMuted, setIsMuted] = useState(true);

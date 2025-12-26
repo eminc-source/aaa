@@ -3987,3 +3987,13 @@
   }
 }
 
+/* Summary Cards Responsive - Balance Sheet, Outflows, Fiat */
+@media (max-width: 768px) {
+  .bs-summary-cards,
+  .outflows-summary-cards,
+  .fiat-summary-cards {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}
+

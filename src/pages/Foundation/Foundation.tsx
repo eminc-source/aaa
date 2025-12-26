@@ -709,7 +709,53 @@ const Foundation: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
+                {/* Download Options */}
+                <div className="download-bar">
+                  <span className="download-label">DOWNLOAD:</span>
+                  <button
+                    className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToCSV(balanceSheetData.singleFormat.map(pool => ({
+                      'Pool/Fund Name': pool.name,
+                      ...Object.fromEntries(filteredBsColumns.map(col => [col, pool.values[col]])),
+                      'Notes': pool.notes
+                    })), 'algorand-foundation-balance-sheet') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}CSV
+                  </button>
+                  <button
+                    className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToExcel(balanceSheetData.singleFormat.map(pool => ({
+                      'Pool/Fund Name': pool.name,
+                      ...Object.fromEntries(filteredBsColumns.map(col => [col, pool.values[col]])),
+                      'Notes': pool.notes
+                    })), 'algorand-foundation-balance-sheet', 'Balance Sheet') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}XLS
+                  </button>
+                  <button
+                    className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPDF(
+                      balanceSheetData.singleFormat.map(pool => ({
+                        'Pool/Fund Name': pool.name,
+                        ...Object.fromEntries(filteredBsColumns.map(col => [col, pool.values[col]])),
+                        'Notes': pool.notes
+                      })),
+                      'algorand-foundation-balance-sheet',
+                      'ALGORAND FOUNDATION - BALANCE SHEET RECONCILIATION',
+                      `Generated ${new Date().toLocaleDateString()}`
+                    ) : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PDF
+                  </button>
+                  <button
+                    className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-balance-sheet') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PNG
+                  </button>
+                </div>
+
                 <div className="data-note">
                   <span className="note-icon">⚠</span>
                   <p>{balanceSheetData.note}</p>
@@ -1013,6 +1059,61 @@ const Foundation: React.FC = () => {
                   )}
                 </div>
 
+                {/* Download Options */}
+                <div className="download-bar">
+                  <span className="download-label">DOWNLOAD:</span>
+                  <button
+                    className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToCSV(outflowsData.categories.flatMap(cat =>
+                      cat.items.map(item => ({
+                        'Category': cat.name,
+                        'Line Item': item.name,
+                        ...Object.fromEntries(filteredOutflowColumns.map(col => [col, item.values[col]])),
+                        'Total': item.total
+                      }))
+                    ), 'algorand-foundation-outflows') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}CSV
+                  </button>
+                  <button
+                    className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToExcel(outflowsData.categories.flatMap(cat =>
+                      cat.items.map(item => ({
+                        'Category': cat.name,
+                        'Line Item': item.name,
+                        ...Object.fromEntries(filteredOutflowColumns.map(col => [col, item.values[col]])),
+                        'Total': item.total
+                      }))
+                    ), 'algorand-foundation-outflows', 'Outflows') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}XLS
+                  </button>
+                  <button
+                    className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPDF(
+                      outflowsData.categories.flatMap(cat =>
+                        cat.items.map(item => ({
+                          'Category': cat.name,
+                          'Line Item': item.name,
+                          ...Object.fromEntries(filteredOutflowColumns.map(col => [col, item.values[col]])),
+                          'Total': item.total
+                        }))
+                      ),
+                      'algorand-foundation-outflows',
+                      'ALGORAND FOUNDATION - ALL REPORTED OUTFLOWS',
+                      `Generated ${new Date().toLocaleDateString()}`
+                    ) : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PDF
+                  </button>
+                  <button
+                    className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-outflows') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PNG
+                  </button>
+                </div>
+
                 <div className="data-table-container">
                   <div className="table-scroll-wrapper">
                     <table className="data-table outflows-table unified-outflows-table">
@@ -1218,7 +1319,62 @@ const Foundation: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
+                {/* Download Options */}
+                <div className="download-bar">
+                  <span className="download-label">DOWNLOAD:</span>
+                  <button
+                    className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToCSV(fiatExpenseData.categories.flatMap(cat =>
+                      cat.items.map(item => ({
+                        'Category': cat.name,
+                        'Line Item': item.name,
+                        ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
+                        'Total': item.total
+                      }))
+                    ), 'algorand-foundation-fiat-expense') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}CSV
+                  </button>
+                  <button
+                    className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToExcel(fiatExpenseData.categories.flatMap(cat =>
+                      cat.items.map(item => ({
+                        'Category': cat.name,
+                        'Line Item': item.name,
+                        ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
+                        'Total': item.total
+                      }))
+                    ), 'algorand-foundation-fiat-expense', 'Fiat Expense') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}XLS
+                  </button>
+                  <button
+                    className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPDF(
+                      fiatExpenseData.categories.flatMap(cat =>
+                        cat.items.map(item => ({
+                          'Category': cat.name,
+                          'Line Item': item.name,
+                          ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
+                          'Total': item.total
+                        }))
+                      ),
+                      'algorand-foundation-fiat-expense',
+                      'ALGORAND FOUNDATION - FIAT/USD EXPENSES',
+                      `Generated ${new Date().toLocaleDateString()}`
+                    ) : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PDF
+                  </button>
+                  <button
+                    className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-fiat-expense') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PNG
+                  </button>
+                </div>
+
                 <div className="data-note">
                   <span className="note-icon">⚠</span>
                   <p>{fiatExpenseData.note}</p>
@@ -1541,7 +1697,68 @@ const Foundation: React.FC = () => {
                     </div>
                   );
                 })()}
-                
+
+                {/* Download Options */}
+                <div className="download-bar">
+                  <span className="download-label">DOWNLOAD:</span>
+                  <button
+                    className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToCSV(loansData.map(loan => ({
+                      'Borrower': loan.borrower,
+                      'Original Amount': loan.originalAmount,
+                      'When Made': loan.whenMade,
+                      'When Repaid': loan.whenRepaid,
+                      'Repaid Amount': loan.repaidAmount,
+                      'Outstanding': loan.outstanding,
+                      'Status': loan.status,
+                      'Notes': loan.notes
+                    })), 'algorand-foundation-loans') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}CSV
+                  </button>
+                  <button
+                    className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToExcel(loansData.map(loan => ({
+                      'Borrower': loan.borrower,
+                      'Original Amount': loan.originalAmount,
+                      'When Made': loan.whenMade,
+                      'When Repaid': loan.whenRepaid,
+                      'Repaid Amount': loan.repaidAmount,
+                      'Outstanding': loan.outstanding,
+                      'Status': loan.status,
+                      'Notes': loan.notes
+                    })), 'algorand-foundation-loans', 'Loans') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}XLS
+                  </button>
+                  <button
+                    className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPDF(
+                      loansData.map(loan => ({
+                        'Borrower': loan.borrower,
+                        'Original Amount': loan.originalAmount,
+                        'When Made': loan.whenMade,
+                        'When Repaid': loan.whenRepaid,
+                        'Repaid Amount': loan.repaidAmount,
+                        'Outstanding': loan.outstanding,
+                        'Status': loan.status,
+                        'Notes': loan.notes
+                      })),
+                      'algorand-foundation-loans',
+                      'ALGORAND FOUNDATION - LOANS TRACKING',
+                      `Generated ${new Date().toLocaleDateString()}`
+                    ) : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PDF
+                  </button>
+                  <button
+                    className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-loans') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PNG
+                  </button>
+                </div>
+
                 <div className="data-note">
                   <span className="note-icon">ℹ</span>
                   <p>R8 is FIRST report to disclose loan details</p>
@@ -1671,6 +1888,70 @@ const Foundation: React.FC = () => {
                     </div>
                   );
                 })()}
+
+                {/* Download Options */}
+                <div className="download-bar">
+                  <span className="download-label">DOWNLOAD:</span>
+                  <button
+                    className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToCSV(poolTrackingData.map(period => ({
+                      'Period': period.period,
+                      'Opening': period.opening,
+                      'Distributions': period.distributions,
+                      'Inflows': period.inflows,
+                      'Expected Closing': period.expectedClosing,
+                      'Actual Closing': period.actualClosing,
+                      'Discrepancy': period.discrepancy,
+                      'Status': period.status,
+                      'Notes': period.notes
+                    })), 'algorand-foundation-pool-tracking') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}CSV
+                  </button>
+                  <button
+                    className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToExcel(poolTrackingData.map(period => ({
+                      'Period': period.period,
+                      'Opening': period.opening,
+                      'Distributions': period.distributions,
+                      'Inflows': period.inflows,
+                      'Expected Closing': period.expectedClosing,
+                      'Actual Closing': period.actualClosing,
+                      'Discrepancy': period.discrepancy,
+                      'Status': period.status,
+                      'Notes': period.notes
+                    })), 'algorand-foundation-pool-tracking', 'Pool Tracking') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}XLS
+                  </button>
+                  <button
+                    className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPDF(
+                      poolTrackingData.map(period => ({
+                        'Period': period.period,
+                        'Opening': period.opening,
+                        'Distributions': period.distributions,
+                        'Inflows': period.inflows,
+                        'Expected Closing': period.expectedClosing,
+                        'Actual Closing': period.actualClosing,
+                        'Discrepancy': period.discrepancy,
+                        'Status': period.status,
+                        'Notes': period.notes
+                      })),
+                      'algorand-foundation-pool-tracking',
+                      'ALGORAND FOUNDATION - POOL TRACKING',
+                      `Generated ${new Date().toLocaleDateString()}`
+                    ) : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PDF
+                  </button>
+                  <button
+                    className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-pool-tracking') : handleLockedDownload()}
+                  >
+                    {!hasIga333Access && '🔒 '}PNG
+                  </button>
+                </div>
 
                 {/* Pool Tracking Table */}
                 <div className="data-table-container pool-table-container">

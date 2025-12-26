@@ -212,7 +212,6 @@ const Foundation: React.FC = () => {
                     <th className="col-algo">ALGO DISTRIBUTED</th>
                     <th className="col-fiat">FIAT (USD)</th>
                     <th className="col-balance">BALANCE SHEET?</th>
-                    <th className="col-changes">KEY CHANGES</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -236,18 +235,17 @@ const Foundation: React.FC = () => {
                         <td className="col-duration">{report.duration}</td>
                         <td className="col-date">{report.reportDate}</td>
                         <td className="col-algo">{formatAlgo(report.algoDistributed)}</td>
-                        <td className="col-fiat">
+                        <td className={`col-fiat ${(report.reportNumber === 6 || report.reportNumber === 7) ? 'fiat-highlight' : ''}`}>
                           {report.fiatUSD ? formatCurrency(report.fiatUSD) : 'N/R'}
                         </td>
                         <td className={`col-balance ${getBalanceSheetClass(report.balanceSheet)}`}>
                           {report.balanceSheet}
                         </td>
-                        <td className="col-changes">{report.keyChanges}</td>
                       </tr>
                       {/* Expanded Details Row */}
                       {report.details && expandedRows.has(report.reportNumber) && (
                         <tr className="details-row">
-                          <td colSpan={9}>
+                          <td colSpan={8}>
                             <div className="report-details">
                               <div className="details-header">
                                 <h4 className="details-title">
@@ -312,7 +310,7 @@ const Foundation: React.FC = () => {
                     <td colSpan={4} className="totals-label">CUMULATIVE TOTAL</td>
                     <td className="col-algo total-value">{formatAlgo(summary.totalAlgoDistributed)}</td>
                     <td className="col-fiat total-value">{formatCurrency(summary.totalFiatUSD)}</td>
-                    <td colSpan={2}></td>
+                    <td></td>
                   </tr>
                 </tfoot>
               </table>

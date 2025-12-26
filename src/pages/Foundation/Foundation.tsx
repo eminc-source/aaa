@@ -1328,41 +1328,59 @@ const Foundation: React.FC = () => {
                   <span className="download-label">DOWNLOAD:</span>
                   <button
                     className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
-                    onClick={() => hasIga333Access ? exportToCSV(fiatExpenseData.categories.flatMap(cat =>
-                      cat.items.map(item => ({
-                        'Category': cat.name,
+                    onClick={() => hasIga333Access ? exportToCSV([
+                      ...fiatExpenseData.oldFormat.map(item => ({
+                        'Category': 'OLD FORMAT',
+                        'Line Item': item.name,
+                        ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
+                        'Total': item.total
+                      })),
+                      ...fiatExpenseData.newFormat.map(item => ({
+                        'Category': 'NEW FORMAT',
                         'Line Item': item.name,
                         ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
                         'Total': item.total
                       }))
-                    ), 'algorand-foundation-fiat-expense') : handleLockedDownload()}
+                    ], 'algorand-foundation-fiat-expense') : handleLockedDownload()}
                   >
                     {!hasIga333Access && '🔒 '}CSV
                   </button>
                   <button
                     className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
-                    onClick={() => hasIga333Access ? exportToExcel(fiatExpenseData.categories.flatMap(cat =>
-                      cat.items.map(item => ({
-                        'Category': cat.name,
+                    onClick={() => hasIga333Access ? exportToExcel([
+                      ...fiatExpenseData.oldFormat.map(item => ({
+                        'Category': 'OLD FORMAT',
+                        'Line Item': item.name,
+                        ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
+                        'Total': item.total
+                      })),
+                      ...fiatExpenseData.newFormat.map(item => ({
+                        'Category': 'NEW FORMAT',
                         'Line Item': item.name,
                         ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
                         'Total': item.total
                       }))
-                    ), 'algorand-foundation-fiat-expense', 'Fiat Expense') : handleLockedDownload()}
+                    ], 'algorand-foundation-fiat-expense', 'Fiat Expense') : handleLockedDownload()}
                   >
                     {!hasIga333Access && '🔒 '}XLS
                   </button>
                   <button
                     className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
                     onClick={() => hasIga333Access ? exportToPDF(
-                      fiatExpenseData.categories.flatMap(cat =>
-                        cat.items.map(item => ({
-                          'Category': cat.name,
+                      [
+                        ...fiatExpenseData.oldFormat.map(item => ({
+                          'Category': 'OLD FORMAT',
+                          'Line Item': item.name,
+                          ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
+                          'Total': item.total
+                        })),
+                        ...fiatExpenseData.newFormat.map(item => ({
+                          'Category': 'NEW FORMAT',
                           'Line Item': item.name,
                           ...Object.fromEntries(filteredFiatColumns.map(col => [col, item.values[col]])),
                           'Total': item.total
                         }))
-                      ),
+                      ],
                       'algorand-foundation-fiat-expense',
                       'ALGORAND FOUNDATION - FIAT/USD EXPENSES',
                       `Generated ${new Date().toLocaleDateString()}`
@@ -1711,7 +1729,7 @@ const Foundation: React.FC = () => {
                       'Original Amount': loan.originalAmount,
                       'When Made': loan.whenMade,
                       'When Repaid': loan.whenRepaid,
-                      'Repaid Amount': loan.repaidAmount,
+                      'Repaid Amount': loan.repaidAmt,
                       'Outstanding': loan.outstanding,
                       'Status': loan.status,
                       'Notes': loan.notes
@@ -1726,7 +1744,7 @@ const Foundation: React.FC = () => {
                       'Original Amount': loan.originalAmount,
                       'When Made': loan.whenMade,
                       'When Repaid': loan.whenRepaid,
-                      'Repaid Amount': loan.repaidAmount,
+                      'Repaid Amount': loan.repaidAmt,
                       'Outstanding': loan.outstanding,
                       'Status': loan.status,
                       'Notes': loan.notes
@@ -1742,7 +1760,7 @@ const Foundation: React.FC = () => {
                         'Original Amount': loan.originalAmount,
                         'When Made': loan.whenMade,
                         'When Repaid': loan.whenRepaid,
-                        'Repaid Amount': loan.repaidAmount,
+                        'Repaid Amount': loan.repaidAmt,
                         'Outstanding': loan.outstanding,
                         'Status': loan.status,
                         'Notes': loan.notes
@@ -1902,10 +1920,9 @@ const Foundation: React.FC = () => {
                       'Opening': period.opening,
                       'Distributions': period.distributions,
                       'Inflows': period.inflows,
-                      'Expected Closing': period.expectedClosing,
-                      'Actual Closing': period.actualClosing,
-                      'Discrepancy': period.discrepancy,
-                      'Status': period.status,
+                      'Closing': period.closing,
+                      'Calculated': period.calculated,
+                      'Difference': period.difference,
                       'Notes': period.notes
                     })), 'algorand-foundation-pool-tracking') : handleLockedDownload()}
                   >
@@ -1918,10 +1935,9 @@ const Foundation: React.FC = () => {
                       'Opening': period.opening,
                       'Distributions': period.distributions,
                       'Inflows': period.inflows,
-                      'Expected Closing': period.expectedClosing,
-                      'Actual Closing': period.actualClosing,
-                      'Discrepancy': period.discrepancy,
-                      'Status': period.status,
+                      'Closing': period.closing,
+                      'Calculated': period.calculated,
+                      'Difference': period.difference,
                       'Notes': period.notes
                     })), 'algorand-foundation-pool-tracking', 'Pool Tracking') : handleLockedDownload()}
                   >

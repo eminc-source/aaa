@@ -141,7 +141,7 @@
   .main-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 30px;
+    gap: 20px;
     padding: 15px 20px;
   }
 
@@ -152,7 +152,8 @@
   .page-title-container {
     position: static;
     transform: none;
-    margin-top: 20px;
+    margin-top: 0;
+    order: 2;
   }
 
   .page-title {
@@ -170,11 +171,16 @@
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
+    order: 3;
   }
 
   .header-actions > * {
     align-self: center;
     max-width: 100%;
+  }
+
+  .logo-container {
+    order: 1;
   }
 
   .logo-image {

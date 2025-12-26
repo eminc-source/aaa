@@ -140,20 +140,21 @@
 @media (max-width: 900px) {
   .main-header {
     flex-direction: column;
-    align-items: stretch;
-    gap: 20px;
+    align-items: center;
+    gap: 25px;
     padding: 15px 20px;
   }
 
   .logo-container {
     justify-content: center;
+    width: 100%;
   }
 
   .page-title-container {
     position: static;
     transform: none;
     margin-top: 0;
-    order: 2;
+    width: 100%;
   }
 
   .page-title {
@@ -171,16 +172,11 @@
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
-    order: 3;
   }
 
   .header-actions > * {
     align-self: center;
     max-width: 100%;
-  }
-
-  .logo-container {
-    order: 1;
   }
 
   .logo-image {
@@ -191,6 +187,7 @@
 @media (max-width: 600px) {
   .main-header {
     padding: 10px 15px;
+    gap: 20px;
   }
 
   .logo-container {
@@ -204,6 +201,12 @@
 
   .logo-image {
     height: 120px;
+  }
+
+  .header-wallet {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
   }
 
   .logo {

@@ -1091,24 +1091,24 @@
   }
 
   .header-wallet {
-    flex-direction: row;
-    gap: 10px;
-    width: 100%;
-    align-items: stretch;
+    flex-direction: row !important;
+    gap: 10px !important;
+    width: 100% !important;
+    align-items: stretch !important;
   }
 
   .member-status {
-    flex: 1;
-    min-width: 0;
+    flex: 1 !important;
+    min-width: 0 !important;
   }
 
   .wallet-connected {
-    flex: 1;
-    min-width: 0;
+    flex: 1 !important;
+    min-width: 0 !important;
   }
 
   .connect-wallet-btn {
-    width: 100%;
+    width: 100% !important;
   }
 
   .page-content {

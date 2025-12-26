@@ -6,6 +6,7 @@
   border-bottom: 2px solid var(--neon-cyan);
   background: linear-gradient(180deg, var(--bg-purple) 0%, var(--bg-dark) 100%);
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+  position: relative;
 }
 
 .logo-container {
@@ -101,9 +102,32 @@
   opacity: 1;
 }
 
+.page-title-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.page-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 30px var(--neon-cyan);
+  margin: 0;
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+
 .header-actions {
   display: flex;
   align-items: flex-end;
+  gap: 15px;
+}
+
+.header-wallet {
+  display: flex;
+  align-items: stretch;
   gap: 15px;
 }
 
@@ -111,12 +135,23 @@
   .main-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 20px;
+    gap: 30px;
     padding: 15px 20px;
   }
 
   .logo-container {
     justify-content: center;
+  }
+
+  .page-title-container {
+    position: static;
+    transform: none;
+    margin-top: 20px;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    letter-spacing: 2px;
   }
 
   .main-nav {
@@ -131,6 +166,11 @@
     gap: 10px;
   }
 
+  .header-actions > * {
+    align-self: center;
+    max-width: 100%;
+  }
+
   .logo-image {
     height: 140px;
   }
@@ -143,6 +183,11 @@
 
   .logo-container {
     justify-content: center;
+  }
+
+  .page-title {
+    font-size: 1.2rem;
+    letter-spacing: 1px;
   }
 
   .logo-image {

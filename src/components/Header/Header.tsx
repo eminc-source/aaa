@@ -8,9 +8,14 @@ const Header = () => {
       <div className="logo-container">
         <img src="/logo.png" alt="Algo Account Ability Logo" className="logo-image" />
       </div>
+      <div className="page-title-container">
+        <h1 className="page-title">ALGO ACCOUNT ABILITY</h1>
+      </div>
       <div className="header-actions">
-        <MemberStatus />
-        <WalletConnect />
+        <div className="header-wallet">
+          <MemberStatus />
+          <WalletConnect />
+        </div>
       </div>
     </header>
   )

@@ -49,7 +49,7 @@
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .section-title {
     font-size: 1.2rem;
     flex-direction: column;

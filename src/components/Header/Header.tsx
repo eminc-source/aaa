@@ -6,12 +6,7 @@ const Header = () => {
   return (
     <header className="main-header">
       <div className="logo-container">
-        <h1 className="logo">
-          <span className="logo-letter">A</span>
-          <span className="logo-letter">A</span>
-          <span className="logo-letter">A</span>
-        </h1>
-        <p className="tagline">ALGO ACCOUNT ABILITY</p>
+        <img src="/logo.png" alt="Algo Account Ability Logo" className="logo-image" />
       </div>
       <div className="header-actions">
         <MemberStatus />

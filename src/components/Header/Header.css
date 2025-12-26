@@ -205,8 +205,23 @@
   }
 
   .header-wallet {
-    flex-direction: column;
+    flex-direction: row;
     gap: 10px;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .member-status {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .wallet-connected {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .connect-wallet-btn {
     width: 100%;
   }
 

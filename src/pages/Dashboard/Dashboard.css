@@ -56,3 +56,129 @@
     gap: 10px;
   }
 }
+
+/* Wallet Modal (reuse styles from WalletConnect) */
+.dashboard .wallet-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.dashboard .wallet-modal {
+  background: var(--bg-darker);
+  border: 2px solid var(--neon-cyan);
+  padding: 0;
+  min-width: 320px;
+  max-width: 400px;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+}
+
+.dashboard .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: rgba(0, 255, 255, 0.1);
+  border-bottom: 1px solid var(--neon-cyan);
+}
+
+.dashboard .modal-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 10px var(--neon-cyan);
+  margin: 0;
+}
+
+.dashboard .modal-close {
+  background: none;
+  border: none;
+  color: var(--neon-cyan);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+}
+
+.dashboard .modal-close:hover {
+  color: var(--neon-magenta);
+  text-shadow: 0 0 10px var(--neon-magenta);
+}
+
+.dashboard .modal-message {
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 15px 20px 10px;
+  margin: 0;
+}
+
+.dashboard .wallet-list {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px 20px;
+  gap: 8px;
+}
+
+.dashboard .wallet-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--foundation-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dashboard .wallet-option:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: var(--neon-cyan);
+}
+
+.dashboard .wallet-name {
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.dashboard .wallet-arrow {
+  color: var(--neon-cyan);
+  font-size: 0.8rem;
+}
+
+.dashboard .wallet-help {
+  padding: 15px 20px 20px;
+  border-top: 1px solid var(--foundation-secondary);
+  text-align: center;
+}
+
+.dashboard .wallet-help p {
+  font-family: 'VT323', monospace;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 8px 0;
+}
+
+.dashboard .wallet-help-link {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  color: var(--neon-green);
+  text-decoration: none;
+  text-shadow: 0 0 10px var(--neon-green);
+  transition: all 0.2s ease;
+}
+
+.dashboard .wallet-help-link:hover {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 15px var(--neon-cyan);
+}

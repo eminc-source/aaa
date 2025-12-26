@@ -1,14 +1,26 @@
+import { useWallet } from '@txnlab/use-wallet-react'
 import { OrganizationData } from '../../types'
 import './OrganizationCard.css'
 
 interface OrganizationCardProps {
   data: OrganizationData
   onAccessData?: () => void
+  onConnectWallet?: () => void
 }
 
-const OrganizationCard = ({ data, onAccessData }: OrganizationCardProps) => {
+const OrganizationCard = ({ data, onAccessData, onConnectWallet }: OrganizationCardProps) => {
+  const { activeAccount } = useWallet()
   const { type, name, subtitle, reports, datasets, latestReport, status } = data
   const sectionClass = type === 'foundation' ? 'foundation-section' : 'technologies-section'
+  const isConnected = !!activeAccount
+
+  const handleButtonClick = () => {
+    if (isConnected) {
+      onAccessData?.()
+    } else {
+      onConnectWallet?.()
+    }
+  }
 
   return (
     <section className={`org-section ${sectionClass}`}>
@@ -47,9 +59,14 @@ const OrganizationCard = ({ data, onAccessData }: OrganizationCardProps) => {
           </div>
         </div>
         
-        <button className="retro-btn" onClick={onAccessData}>
-          <span className="btn-text">ACCESS DATA</span>
-          <span className="btn-icon">▶</span>
+        <button 
+          className={`retro-btn ${!isConnected ? 'requires-wallet' : ''}`} 
+          onClick={handleButtonClick}
+        >
+          <span className="btn-text">
+            {isConnected ? 'ACCESS DATA' : 'CONNECT WALLET'}
+          </span>
+          <span className="btn-icon">{isConnected ? '▶' : '⬡'}</span>
         </button>
       </div>
       

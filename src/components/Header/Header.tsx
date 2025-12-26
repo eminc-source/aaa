@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import WalletConnect from '../WalletConnect/WalletConnect'
+import MemberStatus from '../MemberStatus/MemberStatus'
 import './Header.css'
 
 const Header = () => {
@@ -12,11 +13,10 @@ const Header = () => {
         </h1>
         <p className="tagline">ALGO ACCOUNT ABILITY</p>
       </div>
-      <nav className="main-nav">
-        <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          DASHBOARD
-        </NavLink>
-      </nav>
+      <div className="header-actions">
+        <MemberStatus />
+        <WalletConnect />
+      </div>
     </header>
   )
 }

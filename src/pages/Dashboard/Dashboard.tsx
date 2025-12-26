@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useWallet } from '@txnlab/use-wallet-react'
 import OrganizationCard from '../../components/OrganizationCard/OrganizationCard'
 import MusicPlayer from '../../components/MusicPlayer/MusicPlayer'
 import { OrganizationData } from '../../types'
@@ -8,7 +9,9 @@ import './Dashboard.css'
 
 const Dashboard = () => {
   const [currentDate, setCurrentDate] = useState('')
+  const [showWalletPrompt, setShowWalletPrompt] = useState(false)
   const navigate = useNavigate()
+  const { wallets } = useWallet()
 
   // Get actual datasets count
   const datasetsCount = getTotalDataSeriesCount();
@@ -65,6 +68,28 @@ const Dashboard = () => {
     }
   }
 
+  const handleConnectWallet = () => {
+    setShowWalletPrompt(true)
+  }
+
+  const handleWalletSelect = async (walletId: string) => {
+    console.log('Attempting to connect wallet:', walletId)
+    console.log('Available wallets:', wallets.map(w => ({ id: w.id, name: w.metadata.name })))
+    const wallet = wallets.find(w => w.id === walletId)
+    console.log('Found wallet:', wallet?.id, wallet?.metadata.name)
+    if (wallet) {
+      // Close our modal immediately so the wallet's QR modal is visible
+      setShowWalletPrompt(false)
+      try {
+        console.log('Calling wallet.connect()...')
+        await wallet.connect()
+        console.log('Wallet connected successfully!')
+      } catch (error) {
+        console.error('Failed to connect wallet:', error)
+      }
+    }
+  }
+
   return (
     <div className="dashboard">
       <div className="dashboard-header">
@@ -82,13 +107,45 @@ const Dashboard = () => {
       <div className="dashboard-grid">
         <OrganizationCard 
           data={foundationData} 
-          onAccessData={() => handleAccessData('foundation')} 
+          onAccessData={() => handleAccessData('foundation')}
+          onConnectWallet={handleConnectWallet}
         />
         <OrganizationCard 
           data={technologiesData} 
-          onAccessData={() => handleAccessData('technologies')} 
+          onAccessData={() => handleAccessData('technologies')}
+          onConnectWallet={handleConnectWallet}
         />
       </div>
+
+      {showWalletPrompt && (
+        <div className="wallet-modal-overlay" onClick={() => setShowWalletPrompt(false)}>
+          <div className="wallet-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">CONNECT TO ACCESS</h2>
+              <button className="modal-close" onClick={() => setShowWalletPrompt(false)}>✕</button>
+            </div>
+            <p className="modal-message">Connect your Algorand wallet to access the data.</p>
+            <div className="wallet-list">
+              {wallets.map((wallet) => (
+                <button
+                  key={wallet.id}
+                  className="wallet-option"
+                  onClick={() => handleWalletSelect(wallet.id)}
+                >
+                  <span className="wallet-name">{wallet.metadata.name.toUpperCase()}</span>
+                  <span className="wallet-arrow">▶</span>
+                </button>
+              ))}
+            </div>
+            <div className="wallet-help">
+              <p>Don't have a wallet? Create an Algorand Wallet at:</p>
+              <a href="https://www.igetalgo.com/algorand/ecosystem" target="_blank" rel="noopener noreferrer" className="wallet-help-link">
+                iGetAlgo.com
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <MusicPlayer />
     </div>

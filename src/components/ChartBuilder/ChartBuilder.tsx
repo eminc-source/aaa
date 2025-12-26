@@ -38,10 +38,20 @@ interface CalculatedSeries {
   operator: FormulaOperator;
 }
 
+interface ChartBuilderProps {
+  hasIga333Access?: boolean;
+  onDownloadChart?: () => void;
+  onLockedDownload?: () => void;
+}
+
 // Color palette for calculated series
 const calculatedColors = ['#ff6b9d', '#c084fc', '#22d3ee', '#fbbf24', '#a3e635', '#fb7185'];
 
-const ChartBuilder: React.FC = () => {
+const ChartBuilder: React.FC<ChartBuilderProps> = ({
+  hasIga333Access = true,
+  onDownloadChart,
+  onLockedDownload
+}) => {
   const [chartType, setChartType] = useState<ChartType>('line');
   const [selectedSeriesIds, setSelectedSeriesIds] = useState<Set<string>>(new Set());
   const [reportRange, setReportRange] = useState({ start: 'R1', end: 'R18' });
@@ -576,6 +586,18 @@ const ChartBuilder: React.FC = () => {
             <span className="info-label">Selected:</span>
             <span className="info-value">{allActiveSeries.length} series</span>
           </div>
+
+          {onDownloadChart && (
+            <div className="control-group download-control">
+              <label>DOWNLOAD</label>
+              <button
+                className={`download-chart-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? onDownloadChart() : onLockedDownload?.()}
+              >
+                {!hasIga333Access && '🔒 '}PNG
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Chart Display */}

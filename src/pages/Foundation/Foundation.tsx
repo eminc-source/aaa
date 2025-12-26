@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useWallet } from '@txnlab/use-wallet-react';
+import algosdk from 'algosdk';
 import { foundationReports, getFoundationSummary } from '../../data/foundationReports';
 import { formatCurrency, formatAlgo, formatCompact } from '../../utils/formatters';
 import { balanceSheetData, reportColumns, getOldStructureTotal, getNewStructureTotal } from '../../data/balanceSheetData';
@@ -10,19 +12,212 @@ import { poolTrackingData, getPoolTrackingSummary } from '../../data/poolTrackin
 import { flagStats, severityColors, flagsData, Severity } from '../../data/flagsData';
 import { keyObservationsData } from '../../data/keyObservationsData';
 import ChartBuilder from '../../components/ChartBuilder/ChartBuilder';
+import WalletConnect from '../../components/WalletConnect/WalletConnect';
+import MemberStatus from '../../components/MemberStatus/MemberStatus';
+import { exportToCSV, exportToExcel, exportToPDF, exportToPNG, formatSummaryReportsForExport, formatFlagsForExport, formatKeyObservationsForExport } from '../../utils/exportUtils';
 import './Foundation.css';
 
 type TabType = 'summary' | 'data' | 'flags' | 'charts' | 'timeline';
 type DataSubTab = 'balance-sheet' | 'outflows' | 'fiat-expense' | 'loans' | 'pool-tracking';
 
+const IGA_ASA_ID = 2635992378;
+
+// Official report URLs by report number
+const reportUrls: Record<number, string> = {
+  1: 'https://web.archive.org/web/20240518233209/https://www.algorand.foundation/news/october2020',
+  2: 'https://web.archive.org/web/20240518233209/https://www.algorand.foundation/news/october2020',
+  3: 'https://web.archive.org/web/20240518233209/https://www.algorand.foundation/news/october2020',
+  4: 'https://web.archive.org/web/20210511225859/https://algorand.foundation/the-algo/transparency-report-march-2021',
+  5: 'https://web.archive.org/web/20211105153147/https://algorand.foundation/the-algo/transparency-report-september-2021',
+  6: 'https://web.archive.org/web/20220519181326/https://algorand.foundation/the-algo/transparency-report-march-2022',
+  7: 'https://web.archive.org/web/20221210080455/https://algorand.foundation/transparency-report-oct-2022',
+  8: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Foundation%20H1%202023%20Transparency%20Report.pdf',
+  9: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Foundation%20Quarterly%20Transparency%20Report%20Q2%202023%20vFinal.pdf',
+  10: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Foundation%20Quarterly%20Transparency%20Report%20Q3%202023_Final.pdf',
+  11: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Foundation%20Quarterly%20Transparency%20Report%20Q4%202023_Final.pdf',
+  12: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Foundation%20-%20Q1%202024%20Report-v7.pdf',
+  13: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Transparency%20Report%20Q2%202024%20-%20Final.pdf',
+  14: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Foundation%20Q3%202024%20Transparency%20Report%20Final.pdf',
+  15: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Transparency%20Report%20Q4%202024_Final.pdf',
+  16: 'https://algorand.co/hubfs/Website-2024/Transparency%20Reports/Algorand%20Foundation-Transparency%20Report%20Q1%202025-3.pdf',
+  17: 'https://algorand.co/hubfs/Algorand%20Foundation-Transparency%20Report%20Q2%202025-v3.pdf',
+  18: 'https://algorand.co/hubfs/Algorand%20Transparency%20Report-Q3-2025_V3%20Final.pdf',
+};
+
 const Foundation: React.FC = () => {
+  const { activeAccount } = useWallet();
   const [activeTab, setActiveTab] = useState<TabType>('summary');
   const [activeDataSubTab, setActiveDataSubTab] = useState<DataSubTab>('balance-sheet');
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [flagSortColumn, setFlagSortColumn] = useState<'issueNum' | 'category' | 'severity'>('severity');
   const [flagSortDirection, setFlagSortDirection] = useState<'asc' | 'desc'>('asc');
   const [reportSortDirection, setReportSortDirection] = useState<'asc' | 'desc'>('desc'); // desc = newest first
+  const [igaBalance, setIgaBalance] = useState<number>(0);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  
+  // Key Observations filter state
+  const [obsFilterMode, setObsFilterMode] = useState<'all' | 'range' | 'specific'>('all');
+  const [obsRangeFrom, setObsRangeFrom] = useState<number>(1);
+  const [obsRangeTo, setObsRangeTo] = useState<number>(18);
+  const [obsSelectedReports, setObsSelectedReports] = useState<Set<number>>(new Set());
+  
+  // Flags severity filter state
+  const [flagsSeverityFilter, setFlagsSeverityFilter] = useState<Set<string>>(new Set(['HIGH', 'MEDIUM', 'LOW', 'RESOLVED']));
+  
+  // Balance Sheet filter state
+  const [bsFilterMode, setBsFilterMode] = useState<'all' | 'range' | 'specific'>('all');
+  const [bsRangeFrom, setBsRangeFrom] = useState<string>('R4');
+  const [bsRangeTo, setBsRangeTo] = useState<string>('R18');
+  const [bsSelectedReports, setBsSelectedReports] = useState<Set<string>>(new Set());
+  
+  // Outflows filter state
+  const [outflowFilterMode, setOutflowFilterMode] = useState<'all' | 'range' | 'specific'>('all');
+  const [outflowRangeFrom, setOutflowRangeFrom] = useState<string>('R1');
+  const [outflowRangeTo, setOutflowRangeTo] = useState<string>('R18');
+  const [outflowSelectedReports, setOutflowSelectedReports] = useState<Set<string>>(new Set());
+  
+  // Fiat Expense filter state
+  const [fiatFilterMode, setFiatFilterMode] = useState<'all' | 'range' | 'specific'>('all');
+  const [fiatRangeFrom, setFiatRangeFrom] = useState<string>('R1');
+  const [fiatRangeTo, setFiatRangeTo] = useState<string>('R18');
+  const [fiatSelectedReports, setFiatSelectedReports] = useState<Set<string>>(new Set());
+  
   const summary = getFoundationSummary();
+
+  // Check if user has iGA MEMBER status or higher (any iGA balance > 0)
+  const hasIgaMemberAccess = igaBalance > 0;
+  
+  // Check if user has iGA 333 status or higher (iGA balance >= 0.333)
+  const hasIga333Access = igaBalance >= 333000; // 0.333 iGA in micro units
+
+  // Handle locked tab click - show access modal
+  const handleLockedTabClick = () => {
+    if (!hasIgaMemberAccess) {
+      setShowAccessModal(true);
+    }
+  };
+
+  // Handle locked download click - show download access modal
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const handleLockedDownload = () => {
+    setShowDownloadModal(true);
+  };
+
+  // Filter key observations based on filter mode
+  const filteredObservations = React.useMemo(() => {
+    if (obsFilterMode === 'all') {
+      return keyObservationsData;
+    } else if (obsFilterMode === 'range') {
+      return keyObservationsData.filter(
+        r => r.reportNumber >= obsRangeFrom && r.reportNumber <= obsRangeTo
+      );
+    } else {
+      return keyObservationsData.filter(r => obsSelectedReports.has(r.reportNumber));
+    }
+  }, [obsFilterMode, obsRangeFrom, obsRangeTo, obsSelectedReports]);
+
+  // Toggle report selection for specific filter
+  const toggleReportSelection = (reportNum: number) => {
+    setObsSelectedReports(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(reportNum)) {
+        newSet.delete(reportNum);
+      } else {
+        newSet.add(reportNum);
+      }
+      return newSet;
+    });
+  };
+
+  // Select all reports
+  const selectAllReports = () => {
+    setObsSelectedReports(new Set(keyObservationsData.map(r => r.reportNumber)));
+  };
+
+  // Clear all report selections
+  const clearAllReports = () => {
+    setObsSelectedReports(new Set());
+  };
+
+  // Filter balance sheet columns
+  const filteredBsColumns = React.useMemo(() => {
+    if (bsFilterMode === 'all') return reportColumns;
+    if (bsFilterMode === 'range') {
+      const fromIdx = reportColumns.indexOf(bsRangeFrom);
+      const toIdx = reportColumns.indexOf(bsRangeTo);
+      return reportColumns.slice(Math.min(fromIdx, toIdx), Math.max(fromIdx, toIdx) + 1);
+    }
+    return reportColumns.filter(col => bsSelectedReports.has(col));
+  }, [bsFilterMode, bsRangeFrom, bsRangeTo, bsSelectedReports]);
+
+  // Filter outflow columns
+  const filteredOutflowColumns = React.useMemo(() => {
+    if (outflowFilterMode === 'all') return outflowReportColumns;
+    if (outflowFilterMode === 'range') {
+      const fromIdx = outflowReportColumns.indexOf(outflowRangeFrom);
+      const toIdx = outflowReportColumns.indexOf(outflowRangeTo);
+      return outflowReportColumns.slice(Math.min(fromIdx, toIdx), Math.max(fromIdx, toIdx) + 1);
+    }
+    return outflowReportColumns.filter(col => outflowSelectedReports.has(col));
+  }, [outflowFilterMode, outflowRangeFrom, outflowRangeTo, outflowSelectedReports]);
+
+  // Filter fiat expense columns
+  const filteredFiatColumns = React.useMemo(() => {
+    if (fiatFilterMode === 'all') return fiatReportColumns;
+    if (fiatFilterMode === 'range') {
+      const fromIdx = fiatReportColumns.indexOf(fiatRangeFrom);
+      const toIdx = fiatReportColumns.indexOf(fiatRangeTo);
+      return fiatReportColumns.slice(Math.min(fromIdx, toIdx), Math.max(fromIdx, toIdx) + 1);
+    }
+    return fiatReportColumns.filter(col => fiatSelectedReports.has(col));
+  }, [fiatFilterMode, fiatRangeFrom, fiatRangeTo, fiatSelectedReports]);
+
+  // Helper to toggle string-based report selection
+  const toggleStringReportSelection = (
+    report: string, 
+    setSelected: React.Dispatch<React.SetStateAction<Set<string>>>
+  ) => {
+    setSelected(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(report)) {
+        newSet.delete(report);
+      } else {
+        newSet.add(report);
+      }
+      return newSet;
+    });
+  };
+
+  // Fetch iGA balance when wallet connects
+  useEffect(() => {
+    const fetchIgaBalance = async () => {
+      if (!activeAccount?.address) {
+        setIgaBalance(0);
+        return;
+      }
+
+      try {
+        const algodClient = new algosdk.Algodv2('', 'https://mainnet-api.algonode.cloud', '');
+        const accountInfo = await algodClient.accountInformation(activeAccount.address).do();
+        const assets = accountInfo.assets ?? accountInfo['assets'] ?? [];
+        
+        const igaAsset = assets.find((asset: Record<string, unknown>) => {
+          const assetId = asset['asset-id'] ?? asset['assetId'] ?? asset.assetId;
+          return Number(assetId) === IGA_ASA_ID;
+        });
+        
+        const igaAmount = igaAsset ? (igaAsset.amount ?? igaAsset['amount']) : 0;
+        setIgaBalance(Number(igaAmount));
+      } catch (error) {
+        console.error('Failed to fetch iGA balance:', error);
+        setIgaBalance(0);
+      }
+    };
+
+    fetchIgaBalance();
+    const interval = setInterval(fetchIgaBalance, 30000);
+    return () => clearInterval(interval);
+  }, [activeAccount?.address]);
 
   // Sort reports by date
   const sortedReports = [...foundationReports].sort((a, b) => {
@@ -49,7 +244,11 @@ const Foundation: React.FC = () => {
 
   // Sort flags
   const severityOrder: Record<Severity, number> = { 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, 'RESOLVED': 4 };
-  const sortedFlags = [...flagsData].sort((a, b) => {
+  
+  // Filter flags by severity
+  const filteredFlags = flagsData.filter(flag => flagsSeverityFilter.has(flag.severity));
+  
+  const sortedFlags = [...filteredFlags].sort((a, b) => {
     let comparison = 0;
     if (flagSortColumn === 'issueNum') {
       comparison = a.issueNum - b.issueNum;
@@ -78,6 +277,29 @@ const Foundation: React.FC = () => {
       case 'RESOLVED': return 'severity-resolved';
       default: return '';
     }
+  };
+
+  // Toggle severity filter
+  const toggleSeverityFilter = (severity: string) => {
+    setFlagsSeverityFilter(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(severity)) {
+        newSet.delete(severity);
+      } else {
+        newSet.add(severity);
+      }
+      return newSet;
+    });
+  };
+
+  // Select all severities
+  const selectAllSeverities = () => {
+    setFlagsSeverityFilter(new Set(['HIGH', 'MEDIUM', 'LOW', 'RESOLVED']));
+  };
+
+  // Clear all severity filters
+  const clearAllSeverities = () => {
+    setFlagsSeverityFilter(new Set());
   };
 
   const toggleRow = (reportNumber: number) => {
@@ -114,15 +336,9 @@ const Foundation: React.FC = () => {
           <h1 className="page-title">ALGORAND FOUNDATION</h1>
           <p className="page-subtitle">TRANSPARENCY REPORT - FORENSIC TRACKER</p>
         </div>
-        <div className="header-stats">
-          <div className="stat-item">
-            <span className="stat-label">TOTAL REPORTS</span>
-            <span className="stat-value">{summary.totalReports}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">LATEST</span>
-            <span className="stat-value">{summary.latestReportDate}</span>
-          </div>
+        <div className="header-wallet">
+          <MemberStatus />
+          <WalletConnect />
         </div>
       </header>
 
@@ -135,37 +351,50 @@ const Foundation: React.FC = () => {
           <span className="tab-icon">▣</span> SUMMARY
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'data' ? 'active' : ''}`}
-          onClick={() => setActiveTab('data')}
+          className={`tab-btn ${activeTab === 'data' ? 'active' : ''} ${!hasIgaMemberAccess ? 'locked' : ''}`}
+          onClick={() => hasIgaMemberAccess ? setActiveTab('data') : handleLockedTabClick()}
         >
-          <span className="tab-icon">▦</span> DATA
+          <span className="tab-icon">{!hasIgaMemberAccess ? '🔒' : '▦'}</span> DATA
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'charts' ? 'active' : ''}`}
-          onClick={() => setActiveTab('charts')}
+          className={`tab-btn ${activeTab === 'charts' ? 'active' : ''} ${!hasIgaMemberAccess ? 'locked' : ''}`}
+          onClick={() => hasIgaMemberAccess ? setActiveTab('charts') : handleLockedTabClick()}
         >
-          <span className="tab-icon">▤</span> CHARTS
+          <span className="tab-icon">{!hasIgaMemberAccess ? '🔒' : '▤'}</span> CHARTS
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'flags' ? 'active' : ''}`}
-          onClick={() => setActiveTab('flags')}
+          className={`tab-btn ${activeTab === 'flags' ? 'active' : ''} ${!hasIgaMemberAccess ? 'locked' : ''}`}
+          onClick={() => hasIgaMemberAccess ? setActiveTab('flags') : handleLockedTabClick()}
         >
-          <span className="tab-icon">⚑</span> FLAGS
+          <span className="tab-icon">{!hasIgaMemberAccess ? '🔒' : '⚑'}</span> FLAGS
         </button>
         <button 
-          className={`tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
-          onClick={() => setActiveTab('timeline')}
+          className={`tab-btn ${activeTab === 'timeline' ? 'active' : ''} ${!hasIgaMemberAccess ? 'locked' : ''}`}
+          onClick={() => hasIgaMemberAccess ? setActiveTab('timeline') : handleLockedTabClick()}
         >
-          <span className="tab-icon">▥</span> KEY OBSERVATIONS
+          <span className="tab-icon">{!hasIgaMemberAccess ? '🔒' : '▥'}</span> KEY OBSERVATIONS
         </button>
       </nav>
 
       {/* Main Content */}
       <main className="page-content">
         {activeTab === 'summary' && (
-          <div className="summary-tab">
+          <div className="summary-tab" id="summary-content">
+            {/* Title for PNG export (hidden on screen) */}
+            <div className="png-export-title">
+              <h1>ALGORAND FOUNDATION</h1>
+              <p>TRANSPARENCY REPORT - FORENSIC TRACKER</p>
+            </div>
+
             {/* Summary Cards */}
             <div className="summary-cards">
+              <div className="summary-card holdings-card">
+                <div className="card-icon">Ⱥ</div>
+                <div className="card-content">
+                  <span className="card-label">TOTAL FOUNDATION ALGO HOLDINGS</span>
+                  <span className="card-value">{formatAlgo(1175000000)}</span>
+                </div>
+              </div>
               <div className="summary-card algo-card">
                 <div className="card-icon">Ⱥ</div>
                 <div className="card-content">
@@ -180,13 +409,6 @@ const Foundation: React.FC = () => {
                   <span className="card-value">{formatCurrency(summary.totalFiatUSD)}</span>
                 </div>
               </div>
-              <div className="summary-card holdings-card">
-                <div className="card-icon">Ⱥ</div>
-                <div className="card-content">
-                  <span className="card-label">TOTAL FOUNDATION ALGO HOLDINGS</span>
-                  <span className="card-value">{formatAlgo(1175000000)}</span>
-                </div>
-              </div>
             </div>
 
             {/* Data Purpose Banner */}
@@ -195,6 +417,40 @@ const Foundation: React.FC = () => {
               <p className="purpose-text">
                 Purpose: Track funds across reports to identify discrepancies, hidden movements, or misappropriation
               </p>
+            </div>
+
+            {/* Download Options */}
+            <div className="download-bar">
+              <span className="download-label">DOWNLOAD:</span>
+              <button 
+                className="download-btn csv-btn"
+                onClick={() => exportToCSV(formatSummaryReportsForExport(sortedReports), 'algorand-foundation-summary')}
+              >
+                CSV
+              </button>
+              <button 
+                className="download-btn xls-btn"
+                onClick={() => exportToExcel(formatSummaryReportsForExport(sortedReports), 'algorand-foundation-summary', 'Summary')}
+              >
+                XLS
+              </button>
+              <button 
+                className="download-btn pdf-btn"
+                onClick={() => exportToPDF(
+                  formatSummaryReportsForExport(sortedReports), 
+                  'algorand-foundation-summary',
+                  'ALGORAND FOUNDATION - TRANSPARENCY REPORTS',
+                  `Generated ${new Date().toLocaleDateString()}`
+                )}
+              >
+                PDF
+              </button>
+              <button 
+                className="download-btn png-btn"
+                onClick={() => exportToPNG('summary-content', 'algorand-foundation-summary')}
+              >
+                PNG
+              </button>
             </div>
 
             {/* Data Table */}
@@ -248,12 +504,26 @@ const Foundation: React.FC = () => {
                           <td colSpan={8}>
                             <div className="report-details">
                               <div className="details-header">
-                                <h4 className="details-title">
-                                  REPORT #{report.reportNumber}: {report.period}
-                                </h4>
-                                <span className="details-subtitle">
-                                  {report.duration} • {report.reportDate}
-                                </span>
+                                <div className="details-header-top">
+                                  <div className="details-header-text">
+                                    <h4 className="details-title">
+                                      REPORT #{report.reportNumber}: {report.period}
+                                    </h4>
+                                    <span className="details-subtitle">
+                                      {report.duration} • {report.reportDate}
+                                    </span>
+                                  </div>
+                                  {reportUrls[report.reportNumber] && (
+                                    <a 
+                                      href={reportUrls[report.reportNumber]} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="view-report-btn"
+                                    >
+                                      📄 VIEW OFFICIAL REPORT
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                               
                               <div className="details-grid">
@@ -361,6 +631,84 @@ const Foundation: React.FC = () => {
                   <h2 className="section-title">{balanceSheetData.title}</h2>
                   <p className="section-description">{balanceSheetData.description}</p>
                 </div>
+
+                {/* Summary Boxes */}
+                <div className="bs-summary-cards">
+                  <div className="summary-card bs-green-card">
+                    <div className="card-icon">Ⱥ</div>
+                    <div className="card-content">
+                      <span className="card-label">STARTING BALANCE (R4)</span>
+                      <span className="card-value">Ⱥ{(5347960000).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="summary-card bs-yellow-card">
+                    <div className="card-icon">Ⱥ</div>
+                    <div className="card-content">
+                      <span className="card-label">CURRENT HOLDINGS (R18)</span>
+                      <span className="card-value">Ⱥ{(balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18 || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="summary-card bs-red-card">
+                    <div className="card-icon">Ⱥ</div>
+                    <div className="card-content">
+                      <span className="card-label">HOLDINGS + DISTRIBUTED</span>
+                      <span className="card-value">Ⱥ{((balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18 || 0) + summary.totalAlgoDistributed).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Report Filter */}
+                <div className="obs-filter-bar">
+                  <span className="filter-label">FILTER:</span>
+                  <div className="filter-mode-buttons">
+                    <button 
+                      className={`filter-mode-btn ${bsFilterMode === 'all' ? 'active' : ''}`}
+                      onClick={() => setBsFilterMode('all')}
+                    >
+                      ALL
+                    </button>
+                    <button 
+                      className={`filter-mode-btn ${bsFilterMode === 'range' ? 'active' : ''}`}
+                      onClick={() => setBsFilterMode('range')}
+                    >
+                      RANGE
+                    </button>
+                    <button 
+                      className={`filter-mode-btn ${bsFilterMode === 'specific' ? 'active' : ''}`}
+                      onClick={() => setBsFilterMode('specific')}
+                    >
+                      SELECT
+                    </button>
+                  </div>
+                  {bsFilterMode === 'range' && (
+                    <div className="filter-range-controls">
+                      <span className="filter-range-label">FROM</span>
+                      <select className="filter-select" value={bsRangeFrom} onChange={(e) => setBsRangeFrom(e.target.value)}>
+                        {reportColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                      <span className="filter-range-label">TO</span>
+                      <select className="filter-select" value={bsRangeTo} onChange={(e) => setBsRangeTo(e.target.value)}>
+                        {reportColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  {bsFilterMode === 'specific' && (
+                    <div className="filter-specific-controls">
+                      <div className="filter-quick-actions">
+                        <button className="filter-quick-btn" onClick={() => setBsSelectedReports(new Set(reportColumns))}>ALL</button>
+                        <button className="filter-quick-btn" onClick={() => setBsSelectedReports(new Set())}>NONE</button>
+                      </div>
+                      <div className="filter-report-checkboxes">
+                        {reportColumns.map(col => (
+                          <label key={col} className="filter-checkbox-label">
+                            <input type="checkbox" checked={bsSelectedReports.has(col)} onChange={() => toggleStringReportSelection(col, setBsSelectedReports)} />
+                            <span>{col}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
                 <div className="data-note">
                   <span className="note-icon">⚠</span>
@@ -374,7 +722,7 @@ const Foundation: React.FC = () => {
                       <thead>
                         <tr>
                           <th className="col-pool-name">Pool/Fund Name</th>
-                          {reportColumns.map(col => (
+                          {filteredBsColumns.map(col => (
                             <th key={col} className="col-report-value">{col}</th>
                           ))}
                           <th className="col-notes">Notes</th>
@@ -384,7 +732,7 @@ const Foundation: React.FC = () => {
                         {/* Old Structure Section Header */}
                         <tr className="section-header-row old-structure-header">
                           <td className="col-pool-name section-header-cell">OLD STRUCTURE (R4-R5)</td>
-                          {reportColumns.map(col => (
+                          {filteredBsColumns.map(col => (
                             <td key={col} className="section-header-cell"></td>
                           ))}
                           <td className="section-header-cell"></td>
@@ -393,7 +741,7 @@ const Foundation: React.FC = () => {
                         {balanceSheetData.oldStructure.map((pool, idx) => (
                           <tr key={`old-${idx}`} className="pool-row">
                             <td className="col-pool-name">{pool.name}</td>
-                            {reportColumns.map(col => (
+                            {filteredBsColumns.map(col => (
                               <td key={col} className="col-report-value">
                                 {pool.values[col] === null ? (
                                   <span className="arrow-continue">→</span>
@@ -410,7 +758,7 @@ const Foundation: React.FC = () => {
                         {/* Old Structure Subtotal */}
                         <tr className="totals-row subtotal-row old-structure-total">
                           <td className="col-pool-name totals-label">TOTAL OLD STRUCTURE</td>
-                          {reportColumns.map(col => {
+                          {filteredBsColumns.map(col => {
                             const total = getOldStructureTotal(col);
                             return (
                               <td key={col} className="col-report-value">
@@ -424,7 +772,7 @@ const Foundation: React.FC = () => {
                         {/* Spacer Row */}
                         <tr className="spacer-row">
                           <td className="col-pool-name"></td>
-                          {reportColumns.map(col => (
+                          {filteredBsColumns.map(col => (
                             <td key={col}></td>
                           ))}
                           <td></td>
@@ -433,7 +781,7 @@ const Foundation: React.FC = () => {
                         {/* New Structure Section Header */}
                         <tr className="section-header-row new-structure-header">
                           <td className="col-pool-name section-header-cell">NEW STRUCTURE (R6-R7)</td>
-                          {reportColumns.map(col => (
+                          {filteredBsColumns.map(col => (
                             <td key={col} className="section-header-cell"></td>
                           ))}
                           <td className="section-header-cell"></td>
@@ -442,7 +790,7 @@ const Foundation: React.FC = () => {
                         {balanceSheetData.newStructure.map((pool, idx) => (
                           <tr key={`new-${idx}`} className="pool-row">
                             <td className="col-pool-name">{pool.name}</td>
-                            {reportColumns.map(col => (
+                            {filteredBsColumns.map(col => (
                               <td key={col} className="col-report-value">
                                 {pool.values[col] === null ? (
                                   <span className="arrow-continue">→</span>
@@ -459,7 +807,7 @@ const Foundation: React.FC = () => {
                         {/* New Structure Subtotal */}
                         <tr className="totals-row subtotal-row new-structure-total">
                           <td className="col-pool-name totals-label">TOTAL NEW STRUCTURE</td>
-                          {reportColumns.map(col => {
+                          {filteredBsColumns.map(col => {
                             const total = getNewStructureTotal(col);
                             return (
                               <td key={col} className="col-report-value">
@@ -473,7 +821,7 @@ const Foundation: React.FC = () => {
                         {/* Spacer Row */}
                         <tr className="spacer-row">
                           <td className="col-pool-name"></td>
-                          {reportColumns.map(col => (
+                          {filteredBsColumns.map(col => (
                             <td key={col}></td>
                           ))}
                           <td></td>
@@ -482,7 +830,7 @@ const Foundation: React.FC = () => {
                         {/* R8+ Format Section Header */}
                         <tr className="section-header-row r8plus-header">
                           <td className="col-pool-name section-header-cell">R8+ FORMAT (Single Total)</td>
-                          {reportColumns.map(col => (
+                          {filteredBsColumns.map(col => (
                             <td key={col} className="section-header-cell"></td>
                           ))}
                           <td className="section-header-cell"></td>
@@ -491,7 +839,7 @@ const Foundation: React.FC = () => {
                         {balanceSheetData.singleFormat.map((pool, idx) => (
                           <tr key={`r8-${idx}`} className={`pool-row ${pool.name.includes('Holdings') ? 'holdings-row' : 'usd-row'}`}>
                             <td className="col-pool-name">{pool.name}</td>
-                            {reportColumns.map(col => (
+                            {filteredBsColumns.map(col => (
                               <td key={col} className="col-report-value">
                                 {pool.values[col] === null ? (
                                   pool.name.includes('USD') ? 'N/R' : <span className="arrow-continue">→</span>
@@ -509,7 +857,7 @@ const Foundation: React.FC = () => {
                         {/* Spacer Row */}
                         <tr className="spacer-row">
                           <td className="col-pool-name"></td>
-                          {reportColumns.map(col => (
+                          {filteredBsColumns.map(col => (
                             <td key={col}></td>
                           ))}
                           <td></td>
@@ -518,7 +866,7 @@ const Foundation: React.FC = () => {
                         {/* Grand Total Row */}
                         <tr className="totals-row grand-total-row">
                           <td className="col-pool-name totals-label">CURRENT HOLDINGS (R18)</td>
-                          {reportColumns.map(col => {
+                          {filteredBsColumns.map(col => {
                             // Show the value from singleFormat for R8+, otherwise show old/new structure totals
                             const holdingsRow = balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'));
                             const holdingsValue = holdingsRow?.values[col];
@@ -588,10 +936,81 @@ const Foundation: React.FC = () => {
             )}
 
             {/* All Outflows by Report Sub-Tab */}
-            {activeDataSubTab === 'outflows' && (
+            {activeDataSubTab === 'outflows' && (() => {
+              // Calculate total inflows grand total for summary cards
+              const loanRepaymentsCat = outflowsData.categories.find(c => c.name === 'LOAN REPAYMENTS');
+              const otherInflowsCat = outflowsData.categories.find(c => c.name === 'OTHER INFLOWS');
+              const totalInflowsGrand = (loanRepaymentsCat?.items.reduce((sum, item) => sum + (typeof item.total === 'number' ? item.total : 0), 0) || 0) +
+                (otherInflowsCat?.items.reduce((sum, item) => sum + (typeof item.total === 'number' ? item.total : 0), 0) || 0);
+
+              return (
               <div className="outflows-section">
                 <div className="section-header">
                   <h2 className="section-title">{outflowsData.title}</h2>
+                </div>
+
+
+                {/* Outflows Grand Total Summary Box (matching summary page style) */}
+                <div className="summary-cards outflows-summary-cards">
+                  <div className="summary-card algo-card">
+                    <div className="card-icon">Ⱥ</div>
+                    <div className="card-content">
+                      <span className="card-label">TOTAL ALGO DISTRIBUTED</span>
+                      <span className="card-value">Ⱥ{summary.totalAlgoDistributed.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="summary-card fiat-card">
+                    <div className="card-icon">Ⱥ</div>
+                    <div className="card-content">
+                      <span className="card-label">TOTAL INFLOWS</span>
+                      <span className="card-value">Ⱥ{totalInflowsGrand.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="summary-card bs-yellow-card">
+                    <div className="card-icon">Ⱥ</div>
+                    <div className="card-content">
+                      <span className="card-label">NET OUTFLOWS</span>
+                      <span className="card-value">Ⱥ{(summary.totalAlgoDistributed - totalInflowsGrand).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Report Filter */}
+                <div className="obs-filter-bar">
+                  <span className="filter-label">FILTER:</span>
+                  <div className="filter-mode-buttons">
+                    <button className={`filter-mode-btn ${outflowFilterMode === 'all' ? 'active' : ''}`} onClick={() => setOutflowFilterMode('all')}>ALL</button>
+                    <button className={`filter-mode-btn ${outflowFilterMode === 'range' ? 'active' : ''}`} onClick={() => setOutflowFilterMode('range')}>RANGE</button>
+                    <button className={`filter-mode-btn ${outflowFilterMode === 'specific' ? 'active' : ''}`} onClick={() => setOutflowFilterMode('specific')}>SELECT</button>
+                  </div>
+                  {outflowFilterMode === 'range' && (
+                    <div className="filter-range-controls">
+                      <span className="filter-range-label">FROM</span>
+                      <select className="filter-select" value={outflowRangeFrom} onChange={(e) => setOutflowRangeFrom(e.target.value)}>
+                        {outflowReportColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                      <span className="filter-range-label">TO</span>
+                      <select className="filter-select" value={outflowRangeTo} onChange={(e) => setOutflowRangeTo(e.target.value)}>
+                        {outflowReportColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  {outflowFilterMode === 'specific' && (
+                    <div className="filter-specific-controls">
+                      <div className="filter-quick-actions">
+                        <button className="filter-quick-btn" onClick={() => setOutflowSelectedReports(new Set(outflowReportColumns))}>ALL</button>
+                        <button className="filter-quick-btn" onClick={() => setOutflowSelectedReports(new Set())}>NONE</button>
+                      </div>
+                      <div className="filter-report-checkboxes">
+                        {outflowReportColumns.map(col => (
+                          <label key={col} className="filter-checkbox-label">
+                            <input type="checkbox" checked={outflowSelectedReports.has(col)} onChange={() => toggleStringReportSelection(col, setOutflowSelectedReports)} />
+                            <span>{col}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="data-table-container">
@@ -600,7 +1019,7 @@ const Foundation: React.FC = () => {
                       <thead>
                         <tr>
                           <th className="col-line-item">Line Item</th>
-                          {outflowReportColumns.map(col => (
+                          {filteredOutflowColumns.map(col => (
                             <th key={col} className="col-report-value">{col}</th>
                           ))}
                           <th className="col-total">TOTAL</th>
@@ -612,7 +1031,7 @@ const Foundation: React.FC = () => {
                             {/* Category Header Row */}
                             <tr className={`section-header-row category-header-row category-${catIdx}`}>
                               <td className="col-line-item section-header-cell">{category.name}</td>
-                              {outflowReportColumns.map(col => (
+                              {filteredOutflowColumns.map(col => (
                                 <td key={col} className="section-header-cell"></td>
                               ))}
                               <td className="section-header-cell"></td>
@@ -625,7 +1044,7 @@ const Foundation: React.FC = () => {
                                   {item.isCompleted && <span className="completed-badge">✓</span>}
                                   {item.name}
                                 </td>
-                                {outflowReportColumns.map(col => {
+                                {filteredOutflowColumns.map(col => {
                                   const value = item.values[col];
                                   const isNegative = typeof value === 'number' && value < 0;
                                   return (
@@ -646,7 +1065,7 @@ const Foundation: React.FC = () => {
                             {/* Category Subtotal */}
                             <tr className="totals-row subtotal-row category-subtotal">
                               <td className="col-line-item totals-label">SUBTOTAL: {category.name}</td>
-                              {outflowReportColumns.map(col => {
+                              {filteredOutflowColumns.map(col => {
                                 const catTotal = getCategoryTotal(category, col);
                                 return (
                                   <td key={col} className="col-report-value">
@@ -662,7 +1081,7 @@ const Foundation: React.FC = () => {
                             {catIdx < outflowsData.categories.length - 1 && (
                               <tr className="spacer-row">
                                 <td className="col-line-item"></td>
-                                {outflowReportColumns.map(col => (
+                                {filteredOutflowColumns.map(col => (
                                   <td key={col}></td>
                                 ))}
                                 <td></td>
@@ -696,7 +1115,7 @@ const Foundation: React.FC = () => {
                               return (
                                 <tr className="totals-row inflows-total-row">
                                   <td className="col-line-item totals-label inflows-total-label">TOTAL: ALL INFLOWS</td>
-                                  {outflowReportColumns.map(col => {
+                                  {filteredOutflowColumns.map(col => {
                                     const total = getCombinedInflowTotal(col);
                                     return (
                                       <td key={col} className="col-report-value inflows-total-value">
@@ -716,7 +1135,7 @@ const Foundation: React.FC = () => {
                       <tfoot>
                         <tr className="totals-row grand-total-row">
                           <td className="col-line-item totals-label">GRAND TOTAL</td>
-                          {outflowReportColumns.map(col => (
+                          {filteredOutflowColumns.map(col => (
                             <td key={col} className="col-report-value">
                               {formatCompact(outflowsData.reportedTotals[col])}
                             </td>
@@ -730,13 +1149,74 @@ const Foundation: React.FC = () => {
                   </div>
                 </div>
               </div>
-            )}
+            );
+            })()}
 
             {/* Fiat/USD Expense Sub-Tab */}
             {activeDataSubTab === 'fiat-expense' && (
               <div className="fiat-expense-section">
                 <div className="section-header">
                   <h2 className="section-title">{fiatExpenseData.title}</h2>
+                </div>
+
+                {/* Summary Boxes */}
+                <div className="fiat-summary-cards">
+                  <div className="fiat-summary-card yellow-card">
+                    <div className="fiat-card-content">
+                      <span className="fiat-card-value">{formatUSD(fiatExpenseData.cumulativeTotal.R18 || 0)}</span>
+                      <span className="fiat-card-label">CUMULATIVE FIAT EXPENSES</span>
+                    </div>
+                  </div>
+                  <div className="fiat-summary-card green-card">
+                    <div className="fiat-card-content">
+                      <span className="fiat-card-value">{formatUSD(fiatExpenseData.usdInvestmentsTracking[fiatExpenseData.usdInvestmentsTracking.length - 1].amount)}</span>
+                      <span className="fiat-card-label">USD INVESTMENTS (CURRENT)</span>
+                    </div>
+                  </div>
+                  <div className="fiat-summary-card red-card">
+                    <div className="fiat-card-content">
+                      <span className="fiat-card-value">{formatUSD(fiatExpenseData.changeR17R18)}</span>
+                      <span className="fiat-card-label">CHANGE R17 → R18</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Report Filter */}
+                <div className="obs-filter-bar">
+                  <span className="filter-label">FILTER:</span>
+                  <div className="filter-mode-buttons">
+                    <button className={`filter-mode-btn ${fiatFilterMode === 'all' ? 'active' : ''}`} onClick={() => setFiatFilterMode('all')}>ALL</button>
+                    <button className={`filter-mode-btn ${fiatFilterMode === 'range' ? 'active' : ''}`} onClick={() => setFiatFilterMode('range')}>RANGE</button>
+                    <button className={`filter-mode-btn ${fiatFilterMode === 'specific' ? 'active' : ''}`} onClick={() => setFiatFilterMode('specific')}>SELECT</button>
+                  </div>
+                  {fiatFilterMode === 'range' && (
+                    <div className="filter-range-controls">
+                      <span className="filter-range-label">FROM</span>
+                      <select className="filter-select" value={fiatRangeFrom} onChange={(e) => setFiatRangeFrom(e.target.value)}>
+                        {fiatReportColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                      <span className="filter-range-label">TO</span>
+                      <select className="filter-select" value={fiatRangeTo} onChange={(e) => setFiatRangeTo(e.target.value)}>
+                        {fiatReportColumns.map(col => <option key={col} value={col}>{col}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  {fiatFilterMode === 'specific' && (
+                    <div className="filter-specific-controls">
+                      <div className="filter-quick-actions">
+                        <button className="filter-quick-btn" onClick={() => setFiatSelectedReports(new Set(fiatReportColumns))}>ALL</button>
+                        <button className="filter-quick-btn" onClick={() => setFiatSelectedReports(new Set())}>NONE</button>
+                      </div>
+                      <div className="filter-report-checkboxes">
+                        {fiatReportColumns.map(col => (
+                          <label key={col} className="filter-checkbox-label">
+                            <input type="checkbox" checked={fiatSelectedReports.has(col)} onChange={() => toggleStringReportSelection(col, setFiatSelectedReports)} />
+                            <span>{col}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="data-note">
@@ -751,7 +1231,7 @@ const Foundation: React.FC = () => {
                       <thead>
                         <tr>
                           <th className="col-category">Category</th>
-                          {fiatReportColumns.map(col => (
+                          {filteredFiatColumns.map(col => (
                             <th key={col} className="col-report-value">{col}</th>
                           ))}
                           <th className="col-total">TOTAL</th>
@@ -762,7 +1242,7 @@ const Foundation: React.FC = () => {
                         {/* Old Format Section Header */}
                         <tr className="section-header-row old-format-header">
                           <td className="col-category section-header-cell">OLD FORMAT (R4-R7)</td>
-                          {fiatReportColumns.map(col => (
+                          {filteredFiatColumns.map(col => (
                             <td key={col} className="section-header-cell"></td>
                           ))}
                           <td className="section-header-cell"></td>
@@ -772,7 +1252,7 @@ const Foundation: React.FC = () => {
                         {fiatExpenseData.oldFormat.map((item, idx) => (
                           <tr key={`old-${idx}`} className="fiat-row">
                             <td className="col-category">{item.name}</td>
-                            {fiatReportColumns.map(col => {
+                            {filteredFiatColumns.map(col => {
                               const value = item.values[col];
                               return (
                                 <td key={col} className="col-report-value">
@@ -793,7 +1273,7 @@ const Foundation: React.FC = () => {
                         {/* Old Format Subtotal */}
                         <tr className="totals-row subtotal-row">
                           <td className="col-category totals-label">SUBTOTAL OLD FORMAT</td>
-                          {fiatReportColumns.map(col => {
+                          {filteredFiatColumns.map(col => {
                             const value = fiatExpenseData.oldFormatSubtotal[col];
                             return (
                               <td key={col} className="col-report-value">
@@ -808,7 +1288,7 @@ const Foundation: React.FC = () => {
                         {/* Spacer Row */}
                         <tr className="spacer-row">
                           <td className="col-category"></td>
-                          {fiatReportColumns.map(col => (
+                          {filteredFiatColumns.map(col => (
                             <td key={col}></td>
                           ))}
                           <td></td>
@@ -818,7 +1298,7 @@ const Foundation: React.FC = () => {
                         {/* New Format Section Header */}
                         <tr className="section-header-row new-format-header">
                           <td className="col-category section-header-cell">NEW FORMAT (R8+)</td>
-                          {fiatReportColumns.map(col => (
+                          {filteredFiatColumns.map(col => (
                             <td key={col} className="section-header-cell"></td>
                           ))}
                           <td className="section-header-cell"></td>
@@ -828,7 +1308,7 @@ const Foundation: React.FC = () => {
                         {fiatExpenseData.newFormat.map((item, idx) => (
                           <tr key={`new-${idx}`} className="fiat-row">
                             <td className="col-category">{item.name}</td>
-                            {fiatReportColumns.map(col => {
+                            {filteredFiatColumns.map(col => {
                               const value = item.values[col];
                               const isNegative = typeof value === 'number' && value < 0;
                               return (
@@ -844,7 +1324,7 @@ const Foundation: React.FC = () => {
                         {/* New Format Subtotal */}
                         <tr className="totals-row subtotal-row new-format-subtotal">
                           <td className="col-category totals-label">SUBTOTAL NEW FORMAT</td>
-                          {fiatReportColumns.map(col => {
+                          {filteredFiatColumns.map(col => {
                             const value = fiatExpenseData.newFormatSubtotal[col];
                             return (
                               <td key={col} className="col-report-value">
@@ -859,7 +1339,7 @@ const Foundation: React.FC = () => {
                         {/* Spacer Row */}
                         <tr className="spacer-row">
                           <td className="col-category"></td>
-                          {fiatReportColumns.map(col => (
+                          {filteredFiatColumns.map(col => (
                             <td key={col}></td>
                           ))}
                           <td></td>
@@ -869,7 +1349,7 @@ const Foundation: React.FC = () => {
                         {/* Cumulative Total */}
                         <tr className="totals-row cumulative-row">
                           <td className="col-category totals-label">CUMULATIVE TOTAL</td>
-                          {fiatReportColumns.map(col => {
+                          {filteredFiatColumns.map(col => {
                             const value = fiatExpenseData.cumulativeTotal[col];
                             return (
                               <td key={col} className="col-report-value">
@@ -1247,7 +1727,13 @@ const Foundation: React.FC = () => {
         )}
 
         {activeTab === 'flags' && (
-          <div className="flags-tab">
+          <div className="flags-tab" id="flags-content">
+            {/* Title for PNG export (hidden on screen) */}
+            <div className="png-export-title">
+              <h1>ALGORAND FOUNDATION</h1>
+              <p>FLAGS & ISSUES TRACKER</p>
+            </div>
+
             <div className="section-header">
               <h2 className="section-title">FLAGS & ISSUES TRACKER</h2>
               <p className="section-description">Issues identified that need explanation or further investigation</p>
@@ -1271,6 +1757,78 @@ const Foundation: React.FC = () => {
                 <span className="stat-count">{flagStats.total}</span>
                 <span className="stat-label">TOTAL TRACKED</span>
               </div>
+            </div>
+
+            {/* Severity Filter */}
+            <div className="flags-filter-bar">
+              <span className="filter-label">FILTER BY SEVERITY:</span>
+              <div className="severity-filter-buttons">
+                <button 
+                  className={`severity-filter-btn high ${flagsSeverityFilter.has('HIGH') ? 'active' : ''}`}
+                  onClick={() => toggleSeverityFilter('HIGH')}
+                >
+                  🔴 RED
+                </button>
+                <button 
+                  className={`severity-filter-btn medium ${flagsSeverityFilter.has('MEDIUM') ? 'active' : ''}`}
+                  onClick={() => toggleSeverityFilter('MEDIUM')}
+                >
+                  🟡 YELLOW
+                </button>
+                <button 
+                  className={`severity-filter-btn low ${flagsSeverityFilter.has('LOW') ? 'active' : ''}`}
+                  onClick={() => toggleSeverityFilter('LOW')}
+                >
+                  🟠 LOW
+                </button>
+                <button 
+                  className={`severity-filter-btn resolved ${flagsSeverityFilter.has('RESOLVED') ? 'active' : ''}`}
+                  onClick={() => toggleSeverityFilter('RESOLVED')}
+                >
+                  🟢 RESOLVED
+                </button>
+              </div>
+              <div className="filter-quick-actions">
+                <button className="filter-quick-btn" onClick={selectAllSeverities}>ALL</button>
+                <button className="filter-quick-btn" onClick={clearAllSeverities}>NONE</button>
+              </div>
+              <span className="filter-result-count">
+                {filteredFlags.length} of {flagsData.length} flags
+              </span>
+            </div>
+
+            {/* Download Options */}
+            <div className="download-bar">
+              <span className="download-label">DOWNLOAD:</span>
+              <button 
+                className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToCSV(formatFlagsForExport(sortedFlags), 'algorand-foundation-flags') : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}CSV
+              </button>
+              <button 
+                className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToExcel(formatFlagsForExport(sortedFlags), 'algorand-foundation-flags', 'Flags') : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}XLS
+              </button>
+              <button 
+                className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToPDF(
+                  formatFlagsForExport(sortedFlags), 
+                  'algorand-foundation-flags',
+                  'ALGORAND FOUNDATION - FLAGS & ISSUES',
+                  `Generated ${new Date().toLocaleDateString()}`
+                ) : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}PDF
+              </button>
+              <button 
+                className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToPNG('flags-content', 'algorand-foundation-flags') : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}PNG
+              </button>
             </div>
 
             {/* Unified Flags Table */}
@@ -1330,14 +1888,129 @@ const Foundation: React.FC = () => {
         )}
 
         {activeTab === 'timeline' && (
-          <div className="timeline-tab key-observations-tab">
+          <div className="timeline-tab key-observations-tab" id="observations-content">
+            {/* Title for PNG export (hidden on screen) */}
+            <div className="png-export-title">
+              <h1>ALGORAND FOUNDATION</h1>
+              <p>KEY OBSERVATIONS BY REPORT</p>
+            </div>
+
             <div className="section-header">
               <h2 className="section-title">KEY OBSERVATIONS BY REPORT</h2>
               <p className="section-description">Detailed analysis and notable events from each transparency report</p>
             </div>
 
+            {/* Filter Options */}
+            <div className="obs-filter-bar">
+              <span className="filter-label">FILTER:</span>
+              <div className="filter-mode-buttons">
+                <button 
+                  className={`filter-mode-btn ${obsFilterMode === 'all' ? 'active' : ''}`}
+                  onClick={() => setObsFilterMode('all')}
+                >
+                  ALL
+                </button>
+                <button 
+                  className={`filter-mode-btn ${obsFilterMode === 'range' ? 'active' : ''}`}
+                  onClick={() => setObsFilterMode('range')}
+                >
+                  RANGE
+                </button>
+                <button 
+                  className={`filter-mode-btn ${obsFilterMode === 'specific' ? 'active' : ''}`}
+                  onClick={() => setObsFilterMode('specific')}
+                >
+                  SELECT
+                </button>
+              </div>
+
+              {obsFilterMode === 'range' && (
+                <div className="filter-range-controls">
+                  <span className="filter-range-label">FROM</span>
+                  <select 
+                    className="filter-select"
+                    value={obsRangeFrom}
+                    onChange={(e) => setObsRangeFrom(Number(e.target.value))}
+                  >
+                    {keyObservationsData.map(r => (
+                      <option key={r.reportNumber} value={r.reportNumber}>R{r.reportNumber}</option>
+                    ))}
+                  </select>
+                  <span className="filter-range-label">TO</span>
+                  <select 
+                    className="filter-select"
+                    value={obsRangeTo}
+                    onChange={(e) => setObsRangeTo(Number(e.target.value))}
+                  >
+                    {keyObservationsData.map(r => (
+                      <option key={r.reportNumber} value={r.reportNumber}>R{r.reportNumber}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {obsFilterMode === 'specific' && (
+                <div className="filter-specific-controls">
+                  <div className="filter-quick-actions">
+                    <button className="filter-quick-btn" onClick={selectAllReports}>ALL</button>
+                    <button className="filter-quick-btn" onClick={clearAllReports}>NONE</button>
+                  </div>
+                  <div className="filter-report-checkboxes">
+                    {keyObservationsData.map(r => (
+                      <label key={r.reportNumber} className="filter-checkbox-label">
+                        <input 
+                          type="checkbox" 
+                          checked={obsSelectedReports.has(r.reportNumber)}
+                          onChange={() => toggleReportSelection(r.reportNumber)}
+                        />
+                        <span>R{r.reportNumber}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <span className="filter-result-count">
+                {filteredObservations.length} of {keyObservationsData.length} reports
+              </span>
+            </div>
+
+            {/* Download Options */}
+            <div className="download-bar">
+              <span className="download-label">DOWNLOAD:</span>
+              <button 
+                className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToCSV(formatKeyObservationsForExport(filteredObservations), 'algorand-foundation-observations') : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}CSV
+              </button>
+              <button 
+                className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToExcel(formatKeyObservationsForExport(filteredObservations), 'algorand-foundation-observations', 'Observations') : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}XLS
+              </button>
+              <button 
+                className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToPDF(
+                  formatKeyObservationsForExport(filteredObservations), 
+                  'algorand-foundation-observations',
+                  'ALGORAND FOUNDATION - KEY OBSERVATIONS',
+                  `Generated ${new Date().toLocaleDateString()}`
+                ) : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}PDF
+              </button>
+              <button 
+                className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToPNG('observations-content', 'algorand-foundation-observations') : handleLockedDownload()}
+              >
+                {!hasIga333Access && '🔒 '}PNG
+              </button>
+            </div>
+
             <div className="observations-container">
-              {keyObservationsData.map((report) => (
+              {filteredObservations.map((report) => (
                 <div key={report.reportNumber} className="report-observations">
                   <div className="observation-header">
                     <span className="observation-report-num">R{report.reportNumber}</span>
@@ -1360,6 +2033,56 @@ const Foundation: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Access Required Modal */}
+      {showAccessModal && (
+        <div className="access-modal-overlay" onClick={() => setShowAccessModal(false)}>
+          <div className="access-modal" onClick={e => e.stopPropagation()}>
+            <button className="access-modal-close" onClick={() => setShowAccessModal(false)}>✕</button>
+            <div className="access-modal-icon">🔒</div>
+            <h3 className="access-modal-title">ACCESS RESTRICTED</h3>
+            <p className="access-modal-text">
+              This content requires <span className="highlight">iGA MEMBER</span> status or higher.
+            </p>
+            <p className="access-modal-subtext">
+              Hold any amount of $iGA tokens to unlock full access to all data, charts, flags, and observations.
+            </p>
+            <a 
+              href="https://hay.app/swap?asset_in=0&asset_out=2635992378&amount=1&referrer=VMSQFMHV4KGDTDQYT5YGZGCRV6VM7VQMDO2QM7DACMIXBYIJV2O474VQO4" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="access-modal-btn"
+            >
+              GET $iGA TOKENS →
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Download Access Required Modal */}
+      {showDownloadModal && (
+        <div className="access-modal-overlay" onClick={() => setShowDownloadModal(false)}>
+          <div className="access-modal" onClick={e => e.stopPropagation()}>
+            <button className="access-modal-close" onClick={() => setShowDownloadModal(false)}>✕</button>
+            <div className="access-modal-icon">📥</div>
+            <h3 className="access-modal-title">DOWNLOAD RESTRICTED</h3>
+            <p className="access-modal-text">
+              Downloads require <span className="highlight">iGA 333</span> status or higher.
+            </p>
+            <p className="access-modal-subtext">
+              Hold at least 0.333 $iGA tokens to unlock download access for flags and detailed reports.
+            </p>
+            <a 
+              href="https://hay.app/swap?asset_in=0&asset_out=2635992378&amount=1&referrer=VMSQFMHV4KGDTDQYT5YGZGCRV6VM7VQMDO2QM7DACMIXBYIJV2O474VQO4" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="access-modal-btn"
+            >
+              GET $iGA TOKENS →
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

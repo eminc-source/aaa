@@ -19,8 +19,7 @@ export default function WalletProvider({ children }: Props) {
             projectId: '8da63ba913e2b4064fd01b167b385266'
           }
         }
-      ],
-      network: 'mainnet'
+      ]
     })
   }, [])
 

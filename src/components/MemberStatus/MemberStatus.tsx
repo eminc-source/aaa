@@ -54,7 +54,7 @@ const MemberStatus = () => {
         console.log('Assets found:', assets)
         
         // The property might be 'asset-id' or 'assetId' depending on algosdk version
-        const igaAsset = assets.find((asset: Record<string, unknown>) => {
+        const igaAsset = assets.find((asset: any) => {
           const assetId = asset['asset-id'] ?? asset['assetId'] ?? asset.assetId
           console.log('Checking asset:', assetId, 'against', IGA_ASA_ID)
           return Number(assetId) === IGA_ASA_ID

@@ -200,8 +200,8 @@ const Foundation: React.FC = () => {
         const algodClient = new algosdk.Algodv2('', 'https://mainnet-api.algonode.cloud', '');
         const accountInfo = await algodClient.accountInformation(activeAccount.address).do();
         const assets = accountInfo.assets ?? accountInfo['assets'] ?? [];
-        
-        const igaAsset = assets.find((asset: Record<string, unknown>) => {
+
+        const igaAsset = assets.find((asset: any) => {
           const assetId = asset['asset-id'] ?? asset['assetId'] ?? asset.assetId;
           return Number(assetId) === IGA_ASA_ID;
         });

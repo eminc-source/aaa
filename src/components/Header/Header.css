@@ -107,6 +107,7 @@
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
+  margin-top: -10px;
 }
 
 .page-title {
@@ -117,6 +118,11 @@
   margin: 0;
   letter-spacing: 3px;
   font-weight: 700;
+}
+
+.page-title .letter-a {
+  color: var(--neon-magenta);
+  text-shadow: 0 0 30px var(--neon-magenta);
 }
 
 .header-actions {

@@ -9,7 +9,9 @@ const Header = () => {
         <img src="/logo.png" alt="Algo Account Ability Logo" className="logo-image" />
       </div>
       <div className="page-title-container">
-        <h1 className="page-title">ALGO ACCOUNT ABILITY</h1>
+        <h1 className="page-title">
+          <span className="letter-a">A</span>LGO <span className="letter-a">A</span>CCOUNT <span className="letter-a">A</span>BILITY
+        </h1>
       </div>
       <div className="header-actions">
         <div className="header-wallet">

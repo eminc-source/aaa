@@ -652,7 +652,7 @@ const Foundation: React.FC = () => {
                     <div className="card-icon">Ⱥ</div>
                     <div className="card-content">
                       <span className="card-label">HOLDINGS + DISTRIBUTED</span>
-                      <span className="card-value">Ⱥ{((balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18 || 0) + summary.totalAlgoDistributed).toLocaleString()}</span>
+                      <span className="card-value">Ⱥ{((Number(balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18) || 0) + summary.totalAlgoDistributed).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

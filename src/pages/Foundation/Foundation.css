@@ -1465,11 +1465,11 @@
 
 .sub-tab-navigation {
   display: flex;
+  flex-wrap: wrap;
   gap: 0;
   margin-bottom: 25px;
   background: var(--bg-darker);
   border: 1px solid var(--foundation-secondary);
-  overflow-x: auto;
 }
 
 .sub-tab-btn {
@@ -1479,14 +1479,17 @@
   background: transparent;
   border: none;
   border-right: 1px solid var(--foundation-secondary);
+  border-bottom: 1px solid var(--foundation-secondary);
   padding: 15px 20px;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: fit-content;
 }
 
 .sub-tab-btn:last-child {
-  border-right: none;
+  border-right: 1px solid var(--foundation-secondary);
 }
 
 .sub-tab-btn:hover {

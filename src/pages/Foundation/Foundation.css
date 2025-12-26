@@ -2423,6 +2423,49 @@
   text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
 }
 
+/* Fiat Summary Cards - New Structure */
+.fiat-summary-cards .summary-card.yellow-card {
+  border-color: #ffd700;
+}
+
+.fiat-summary-cards .summary-card.yellow-card::before {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, transparent 50%);
+}
+
+.fiat-summary-cards .summary-card.yellow-card .card-icon,
+.fiat-summary-cards .summary-card.yellow-card .card-value {
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.fiat-summary-cards .summary-card.green-card {
+  border-color: #39ff14;
+}
+
+.fiat-summary-cards .summary-card.green-card::before {
+  background: linear-gradient(135deg, rgba(57, 255, 20, 0.1) 0%, transparent 50%);
+}
+
+.fiat-summary-cards .summary-card.green-card .card-icon,
+.fiat-summary-cards .summary-card.green-card .card-value {
+  color: #39ff14;
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+}
+
+.fiat-summary-cards .summary-card.red-card {
+  border-color: #ff4444;
+}
+
+.fiat-summary-cards .summary-card.red-card::before {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, transparent 50%);
+}
+
+.fiat-summary-cards .summary-card.red-card .card-icon,
+.fiat-summary-cards .summary-card.red-card .card-value {
+  color: #ff4444;
+  text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+}
+
 .fiat-card-label {
   font-family: 'Press Start 2P', cursive;
   font-size: 0.45rem;

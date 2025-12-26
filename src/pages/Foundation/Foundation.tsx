@@ -1262,22 +1262,25 @@ const Foundation: React.FC = () => {
 
                 {/* Summary Boxes */}
                 <div className="fiat-summary-cards">
-                  <div className="fiat-summary-card yellow-card">
-                    <div className="fiat-card-content">
-                      <span className="fiat-card-value">{formatUSD(fiatExpenseData.cumulativeTotal.R18 || 0)}</span>
-                      <span className="fiat-card-label">CUMULATIVE FIAT EXPENSES</span>
+                  <div className="summary-card yellow-card">
+                    <div className="card-icon">$</div>
+                    <div className="card-content">
+                      <span className="card-label">CUMULATIVE FIAT EXPENSES</span>
+                      <span className="card-value">{formatUSD(fiatExpenseData.cumulativeTotal.R18 || 0)}</span>
                     </div>
                   </div>
-                  <div className="fiat-summary-card green-card">
-                    <div className="fiat-card-content">
-                      <span className="fiat-card-value">{formatUSD(fiatExpenseData.usdInvestmentsTracking[fiatExpenseData.usdInvestmentsTracking.length - 1].amount)}</span>
-                      <span className="fiat-card-label">USD INVESTMENTS (CURRENT)</span>
+                  <div className="summary-card green-card">
+                    <div className="card-icon">$</div>
+                    <div className="card-content">
+                      <span className="card-label">USD INVESTMENTS (CURRENT)</span>
+                      <span className="card-value">{formatUSD(fiatExpenseData.usdInvestmentsTracking[fiatExpenseData.usdInvestmentsTracking.length - 1].amount)}</span>
                     </div>
                   </div>
-                  <div className="fiat-summary-card red-card">
-                    <div className="fiat-card-content">
-                      <span className="fiat-card-value">{formatUSD(fiatExpenseData.changeR17R18)}</span>
-                      <span className="fiat-card-label">CHANGE R17 → R18</span>
+                  <div className="summary-card red-card">
+                    <div className="card-icon">$</div>
+                    <div className="card-content">
+                      <span className="card-label">CHANGE R17 → R18</span>
+                      <span className="card-value">{formatUSD(fiatExpenseData.changeR17R18)}</span>
                     </div>
                   </div>
                 </div>

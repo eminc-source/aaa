@@ -1951,10 +1951,9 @@ const Foundation: React.FC = () => {
                         'Opening': period.opening,
                         'Distributions': period.distributions,
                         'Inflows': period.inflows,
-                        'Expected Closing': period.expectedClosing,
-                        'Actual Closing': period.actualClosing,
-                        'Discrepancy': period.discrepancy,
-                        'Status': period.status,
+                        'Closing': period.closing,
+                        'Calculated': period.calculated,
+                        'Difference': period.difference,
                         'Notes': period.notes
                       })),
                       'algorand-foundation-pool-tracking',

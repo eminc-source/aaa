@@ -26,7 +26,7 @@ const Dashboard = () => {
   const technologiesData: OrganizationData = {
     type: 'technologies',
     name: 'ALGORAND TECHNOLOGIES',
-    subtitle: 'FKA ALGORAND INC.',
+    subtitle: '',
     reports: 0,
     datasets: 0,
     latestReport: '',

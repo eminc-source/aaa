@@ -33,7 +33,7 @@ const MusicPlayer = () => {
     } else {
       try {
         await audioRef.current.play();
-      } catch (err) {
+      } catch {
         // Audio playback requires user interaction, silently handle
       }
     }

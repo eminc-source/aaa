@@ -1,8 +1,8 @@
 /* =============================================
-   FOUNDATION PAGE STYLES - RETRO THEME
+   TECHNOLOGIES PAGE STYLES - RETRO THEME
    ============================================= */
 
-.technologies-page .technologies-page {
+.technologies-page {
   min-height: 100vh;
   background: var(--bg-dark);
   position: relative;

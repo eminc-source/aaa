@@ -6,6 +6,8 @@ export interface TransparencyReport {
   duration: string;
   reportDate: string;
   algoDistributed: number;
+  incentivesTotal?: number;
+  totalHoldings?: number;
   fiatUSD: number | null;
   balanceSheet: BalanceSheetStatus;
   keyChanges: string;

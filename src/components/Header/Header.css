@@ -110,19 +110,25 @@
   margin-top: -10px;
 }
 
-.page-title {
+.main-header .page-title {
   font-family: 'Orbitron', sans-serif;
   font-size: 2rem;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 30px var(--neon-cyan);
   margin: 0;
   letter-spacing: 3px;
   font-weight: 700;
-}
-
-.page-title .letter-a {
-  color: var(--neon-magenta);
-  text-shadow: 0 0 30px var(--neon-magenta);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--neon-cyan),
+    var(--neon-magenta),
+    var(--neon-cyan),
+    transparent
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-flow 3s linear infinite;
 }
 
 .header-actions {

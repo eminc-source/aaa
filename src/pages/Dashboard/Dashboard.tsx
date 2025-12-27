@@ -30,9 +30,9 @@ const Dashboard = () => {
     type: 'technologies',
     name: 'ALGORAND TECHNOLOGIES',
     subtitle: '',
-    reports: 0,
+    reports: 7,
     datasets: 0,
-    latestReport: '',
+    latestReport: 'Jul 2021',
     status: 'online'
   }
 
@@ -63,8 +63,7 @@ const Dashboard = () => {
     if (org === 'foundation') {
       navigate('/foundation')
     } else {
-      console.log(`Accessing data for: ${org}`)
-      // Future: Navigate to technologies view
+      navigate('/technologies')
     }
   }
 

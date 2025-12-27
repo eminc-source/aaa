@@ -7,16 +7,29 @@
   margin-bottom: 40px;
 }
 
-.section-title {
+.dashboard .section-title {
   font-family: 'Orbitron', sans-serif;
   font-size: 1.8rem;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 20px var(--neon-cyan);
   margin-bottom: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 20px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--neon-cyan),
+    var(--neon-magenta),
+    var(--neon-yellow),
+    var(--neon-magenta),
+    var(--neon-cyan),
+    transparent
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-flow 3s linear infinite;
 }
 
 .title-decoration {

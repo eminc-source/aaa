@@ -16,10 +16,10 @@ const MusicPlayer = () => {
 
     audioRef.current = audio;
 
-    // Auto-play music on load
+    // Attempt to auto-play music on load
+    // If browser blocks it, music will start on first user interaction
     audio.play().catch(() => {
-      // Browser may block autoplay, user will need to click the button
-      setIsMuted(true);
+      // Silently handle autoplay restriction - music will play on interaction
     });
 
     return () => {

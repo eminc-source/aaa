@@ -34,7 +34,7 @@ const MusicPlayer = () => {
       try {
         await audioRef.current.play();
       } catch (err) {
-        console.log('Audio playback requires user interaction:', err);
+        // Audio playback requires user interaction, silently handle
       }
     }
   };

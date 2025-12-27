@@ -72,17 +72,12 @@ const Dashboard = () => {
   }
 
   const handleWalletSelect = async (walletId: string) => {
-    console.log('Attempting to connect wallet:', walletId)
-    console.log('Available wallets:', wallets.map(w => ({ id: w.id, name: w.metadata.name })))
     const wallet = wallets.find(w => w.id === walletId)
-    console.log('Found wallet:', wallet?.id, wallet?.metadata.name)
     if (wallet) {
       // Close our modal immediately so the wallet's QR modal is visible
       setShowWalletPrompt(false)
       try {
-        console.log('Calling wallet.connect()...')
         await wallet.connect()
-        console.log('Wallet connected successfully!')
       } catch (error) {
         console.error('Failed to connect wallet:', error)
       }

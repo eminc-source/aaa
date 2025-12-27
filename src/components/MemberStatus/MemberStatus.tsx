@@ -41,26 +41,19 @@ const MemberStatus = () => {
         const algodClient = new algosdk.Algodv2('', 'https://mainnet-api.algonode.cloud', '')
         
         const accountInfo = await algodClient.accountInformation(activeAccount.address).do()
-        
-        console.log('Account info:', accountInfo)
-        console.log('Looking for ASA ID:', IGA_ASA_ID)
-        
+
         // Get ALGO balance (in microAlgos) - handle both old and new algosdk formats
         const algoAmount = accountInfo.amount ?? accountInfo['amount']
         setAlgoBalance(Number(algoAmount))
-        
+
         // Find $iGA asset balance - handle both old and new algosdk formats
         const assets = accountInfo.assets ?? accountInfo['assets'] ?? []
-        console.log('Assets found:', assets)
-        
+
         // The property might be 'asset-id' or 'assetId' depending on algosdk version
         const igaAsset = assets.find((asset: any) => {
           const assetId = asset['asset-id'] ?? asset['assetId'] ?? asset.assetId
-          console.log('Checking asset:', assetId, 'against', IGA_ASA_ID)
           return Number(assetId) === IGA_ASA_ID
         })
-        
-        console.log('Found iGA asset:', igaAsset)
         const igaAmount = igaAsset ? (igaAsset.amount ?? igaAsset['amount']) : 0
         setIgaBalance(Number(igaAmount))
       } catch (error) {

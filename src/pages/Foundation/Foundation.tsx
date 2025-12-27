@@ -756,13 +756,22 @@ const Foundation: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="data-note">
-                  <span className="note-icon">⚠</span>
-                  <p>{balanceSheetData.note}</p>
-                </div>
+                {/* Wrapper for PNG export */}
+                <div id="data-content">
+                  {/* PNG Export Title (hidden by default, shown during export) */}
+                  <div className="png-export-title">
+                    <h1 style={{ textAlign: 'center', margin: '20px 0', color: 'var(--neon-cyan)' }}>
+                      ALGORAND FOUNDATION - BALANCE SHEET RECONCILIATION
+                    </h1>
+                  </div>
 
-                {/* Unified Balance Sheet Table */}
-                <div className="data-table-container">
+                  <div className="data-note">
+                    <span className="note-icon">⚠</span>
+                    <p>{balanceSheetData.note}</p>
+                  </div>
+
+                  {/* Unified Balance Sheet Table */}
+                  <div className="data-table-container">
                   <div className="table-scroll-wrapper">
                     <table className="data-table balance-table unified-balance-table">
                       <thead>
@@ -978,6 +987,7 @@ const Foundation: React.FC = () => {
                     ))}
                   </div>
                 </div>
+                </div> {/* Close data-content wrapper */}
               </div>
             )}
 

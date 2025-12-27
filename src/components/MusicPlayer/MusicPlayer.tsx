@@ -5,7 +5,7 @@ import './MusicPlayer.css';
 const TRACK_URL = '/synthwave-139501.mp3';
 
 const MusicPlayer = () => {
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -13,8 +13,14 @@ const MusicPlayer = () => {
     const audio = new Audio(TRACK_URL);
     audio.loop = true;
     audio.volume = 0.25;
-    
+
     audioRef.current = audio;
+
+    // Auto-play music on load
+    audio.play().catch(() => {
+      // Browser may block autoplay, user will need to click the button
+      setIsMuted(true);
+    });
 
     return () => {
       audio.pause();

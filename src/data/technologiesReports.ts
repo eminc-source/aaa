@@ -11,7 +11,8 @@ export const technologiesReports: TransparencyReport[] = [
     algoDistributed: 111200000,
     fiatUSD: 71000000,
     balanceSheet: "NO",
-    keyChanges: "Network launch; Algo Capital 100M investment"
+    keyChanges: "Network launch; Algo Capital 100M investment",
+    notes: "First report; No sales"
   },
   {
     reportNumber: 2,
@@ -23,7 +24,8 @@ export const technologiesReports: TransparencyReport[] = [
     algoDistributed: 155000000,
     fiatUSD: 135000000,
     balanceSheet: "NO",
-    keyChanges: "Equity investments +43.6M; Lending +63.5M"
+    keyChanges: "Equity investments +43.6M; Lending +63.5M",
+    notes: "No sales; Selling plan announced"
   },
   {
     reportNumber: 3,
@@ -35,7 +37,8 @@ export const technologiesReports: TransparencyReport[] = [
     algoDistributed: 164000000,
     fiatUSD: 184400000,
     balanceSheet: "NO",
-    keyChanges: "Algo Capital → Borderless Capital; FIRST SALES 21M ALGO; 0.55% of exchange volume"
+    keyChanges: "Algo Capital → Borderless Capital; FIRST SALES 21M ALGO; 0.55% of exchange volume",
+    notes: "0.55% of exchange volume"
   },
   {
     reportNumber: 4,
@@ -47,7 +50,8 @@ export const technologiesReports: TransparencyReport[] = [
     algoDistributed: 184000000,
     fiatUSD: 184400000,
     balanceSheet: "NO",
-    keyChanges: "Borderless +10M; Equity 0M; Sales 36M; Initial ecosystem FLAT; 0.24% volume"
+    keyChanges: "Borderless +10M; Equity 0M; Sales 36M; Initial ecosystem FLAT; 0.24% volume",
+    notes: "Financial ecosystem FLAT; 0.32% volume"
   },
   {
     reportNumber: 5,
@@ -59,7 +63,8 @@ export const technologiesReports: TransparencyReport[] = [
     algoDistributed: 192000000,
     fiatUSD: 184400000,
     balanceSheet: "NO",
-    keyChanges: "Sales 26M; Borderless +2M; Equity +4M; Initial ecosystem FLAT; 0.24% volume"
+    keyChanges: "Sales 26M; Borderless +2M; Equity +4M; Initial ecosystem FLAT; 0.24% volume",
+    notes: "Financial ecosystem FLAT; 0.24% volume"
   },
   {
     reportNumber: 6,
@@ -71,7 +76,8 @@ export const technologiesReports: TransparencyReport[] = [
     algoDistributed: 240500000,
     fiatUSD: 201000000,
     balanceSheet: "NO",
-    keyChanges: "Borderless +44M; MM +22.6M; Lending -6.5M; Sales 72M; BIGGEST sales period; MM doubled"
+    keyChanges: "Borderless +44M; MM +22.6M; Lending -6.5M; Sales 72M; BIGGEST sales period; MM doubled",
+    notes: "BIGGEST sales period; MM doubled"
   },
   {
     reportNumber: 7,
@@ -83,7 +89,8 @@ export const technologiesReports: TransparencyReport[] = [
     algoDistributed: 1509000000,
     fiatUSD: 130000000,
     balanceSheet: "NO",
-    keyChanges: "Venture Funds 1.15B; Lending -109M; Sales 150M; FINAL REPORT; Structure changed"
+    keyChanges: "Venture Funds 1.15B; Lending -109M; Sales 150M; FINAL REPORT; Structure changed",
+    notes: "FINAL REPORT; Structure changed"
   }
 ];
 

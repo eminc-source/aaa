@@ -11,6 +11,7 @@ export interface TransparencyReport {
   fiatUSD: number | null;
   balanceSheet: BalanceSheetStatus;
   keyChanges: string;
+  notes?: string;
   details?: ReportDetails;
 }
 

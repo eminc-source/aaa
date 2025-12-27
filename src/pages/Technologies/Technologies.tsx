@@ -11,6 +11,7 @@ type TabType = 'summary' | 'data' | 'charts' | 'flags' | 'observations';
 const Technologies: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('summary');
   const [reportSortDirection, setReportSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [expandedReports, setExpandedReports] = useState<Set<number>>(new Set());
 
   const summary = getTechnologiesSummary();
 
@@ -23,6 +24,18 @@ const Technologies: React.FC = () => {
 
   const toggleReportSort = () => {
     setReportSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
+  const toggleReportExpand = (reportNumber: number) => {
+    setExpandedReports(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(reportNumber)) {
+        newSet.delete(reportNumber);
+      } else {
+        newSet.add(reportNumber);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -115,6 +128,7 @@ const Technologies: React.FC = () => {
             <table className="retro-table summary-table">
               <thead>
                 <tr>
+                  <th className="col-expand"></th>
                   <th className="col-report">#</th>
                   <th className="col-period">PERIOD</th>
                   <th className="col-duration">DURATION</th>
@@ -127,28 +141,56 @@ const Technologies: React.FC = () => {
                   <th className="col-algo">TOTAL HOLDINGS</th>
                   <th className="col-fiat">INCENTIVES TOTAL</th>
                   <th className="col-fiat">FINANCIAL ECOSYSTEM</th>
-                  <th>KEY EVENTS</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedReports.map((report) => (
-                  <tr key={report.reportNumber}>
-                    <td className="col-report">{report.reportNumber}</td>
-                    <td className="col-period">{report.period}</td>
-                    <td className="col-duration">{report.duration}</td>
-                    <td className="col-date">{report.reportDate}</td>
-                    <td className="col-algo">
-                      {report.totalHoldings ? formatAlgo(report.totalHoldings) : '-'}
-                    </td>
-                    <td className="col-algo">
-                      {report.incentivesTotal ? formatAlgo(report.incentivesTotal) : '-'}
-                    </td>
-                    <td className="col-fiat">
-                      {report.fiatUSD ? `$${formatCurrency(report.fiatUSD)}` : '-'}
-                    </td>
-                    <td>{report.keyChanges}</td>
-                  </tr>
-                ))}
+                {sortedReports.map((report) => {
+                  const isExpanded = expandedReports.has(report.reportNumber);
+                  return (
+                    <React.Fragment key={report.reportNumber}>
+                      <tr
+                        className={isExpanded ? 'expanded' : ''}
+                        onClick={() => toggleReportExpand(report.reportNumber)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <td className="col-expand">
+                          <span className="expand-arrow">{isExpanded ? '▼' : '▶'}</span>
+                        </td>
+                        <td className="col-report">{report.reportNumber}</td>
+                        <td className="col-period">{report.period}</td>
+                        <td className="col-duration">{report.duration}</td>
+                        <td className="col-date">{report.reportDate}</td>
+                        <td className="col-algo">
+                          {report.totalHoldings ? formatAlgo(report.totalHoldings) : '-'}
+                        </td>
+                        <td className="col-algo">
+                          {report.incentivesTotal ? formatAlgo(report.incentivesTotal) : '-'}
+                        </td>
+                        <td className="col-fiat">
+                          {report.fiatUSD ? `$${formatCurrency(report.fiatUSD)}` : '-'}
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="details-row">
+                          <td colSpan={8}>
+                            <div className="report-details">
+                              <div className="detail-section">
+                                <h4 className="detail-title">KEY EVENTS</h4>
+                                <p className="detail-content">{report.keyChanges}</p>
+                              </div>
+                              {report.notes && (
+                                <div className="detail-section">
+                                  <h4 className="detail-title">NOTES</h4>
+                                  <p className="detail-content">{report.notes}</p>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

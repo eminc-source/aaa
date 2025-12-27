@@ -106,11 +106,6 @@
   animation: fadeIn 0.2s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 .wallet-modal {
   background: var(--bg-dark);
   border: 2px solid var(--neon-cyan);
@@ -120,17 +115,6 @@
   min-width: 350px;
   max-width: 450px;
   animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from { 
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .modal-header {
@@ -239,11 +223,6 @@
   font-size: 1.2rem;
   color: var(--neon-cyan);
   animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
 }
 
 /* =============================================

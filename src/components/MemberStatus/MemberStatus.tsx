@@ -28,6 +28,8 @@ const MemberStatus = () => {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchBalances = async () => {
       if (!activeAccount?.address) {
         setAlgoBalance(0)
@@ -39,8 +41,11 @@ const MemberStatus = () => {
       try {
         // Use Nodely public API for mainnet
         const algodClient = new algosdk.Algodv2('', 'https://mainnet-api.algonode.cloud', '')
-        
+
         const accountInfo = await algodClient.accountInformation(activeAccount.address).do()
+
+        // Only update state if component is still mounted
+        if (!isMounted) return
 
         // Get ALGO balance (in microAlgos) - handle both old and new algosdk formats
         const algoAmount = accountInfo.amount ?? accountInfo['amount']
@@ -57,17 +62,26 @@ const MemberStatus = () => {
         const igaAmount = igaAsset ? (igaAsset.amount ?? igaAsset['amount']) : 0
         setIgaBalance(Number(igaAmount))
       } catch (error) {
-        console.error('Failed to fetch balances:', error)
+        // Only log error if component is still mounted
+        if (isMounted) {
+          console.error('Failed to fetch balances:', error)
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchBalances()
-    
+
     // Refresh balances every 30 seconds
     const interval = setInterval(fetchBalances, 30000)
-    return () => clearInterval(interval)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [activeAccount?.address])
 
   if (!activeAccount) {

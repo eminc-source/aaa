@@ -1,5 +1,6 @@
 /* =============================================
    ALGO ACCOUNT ABILITY - RETRO 80s/90s THEME
+   v1.0.1 - Force cache refresh for deployment
    ============================================= */
 
 :root {
@@ -10,8 +11,8 @@
   --neon-yellow: #ffff00;
   --neon-green: #39ff14;
   --neon-orange: #ff6600;
-  
-  /* Background Colors */
+
+  /* Background Colors - Dark cyberpunk theme */
   --bg-dark: #0a0a0f;
   --bg-darker: #050508;
   --bg-purple: #1a0a2e;
@@ -48,6 +49,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {

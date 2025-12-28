@@ -5,6 +5,7 @@ import OrganizationCard from '../../components/OrganizationCard/OrganizationCard
 import MusicPlayer from '../../components/MusicPlayer/MusicPlayer'
 import { OrganizationData } from '../../types'
 import { getTotalDataSeriesCount } from '../../data/chartDataSources'
+import { getTechTotalDataSeriesCount } from '../../data/techChartDataSources'
 import './Dashboard.css'
 
 const Dashboard = () => {
@@ -14,14 +15,15 @@ const Dashboard = () => {
   const { wallets } = useWallet()
 
   // Get actual datasets count
-  const datasetsCount = getTotalDataSeriesCount();
+  const foundationDatasetsCount = getTotalDataSeriesCount();
+  const techDatasetsCount = getTechTotalDataSeriesCount();
 
   // Organization data - will be dynamic in the future
   const foundationData: OrganizationData = {
     type: 'foundation',
     name: 'ALGORAND FOUNDATION',
     reports: 18,
-    datasets: datasetsCount,
+    datasets: foundationDatasetsCount,
     latestReport: 'Oct 2025',
     status: 'online'
   }
@@ -31,8 +33,8 @@ const Dashboard = () => {
     name: 'ALGORAND TECHNOLOGIES',
     subtitle: '',
     reports: 7,
-    datasets: 0,
-    latestReport: 'Jul 2021',
+    datasets: techDatasetsCount,
+    latestReport: 'Jun 2022',
     status: 'online'
   }
 

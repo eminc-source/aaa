@@ -632,30 +632,44 @@ const Foundation: React.FC = () => {
                   <p className="section-description">{balanceSheetData.description}</p>
                 </div>
 
-                {/* Summary Boxes */}
-                <div className="bs-summary-cards">
-                  <div className="summary-card bs-green-card">
-                    <div className="card-icon">Ⱥ</div>
-                    <div className="card-content">
-                      <span className="card-label">STARTING BALANCE (R4)</span>
-                      <span className="card-value">Ⱥ{(5347960000).toLocaleString()}</span>
+                {/* Wrapper for PNG export - starts here to include summary boxes and table but exclude download/filter */}
+                <div id="data-content">
+                  {/* PNG Export Title (hidden by default, shown during export) */}
+                  <div className="png-export-title">
+                    <h1 style={{ textAlign: 'center', margin: '20px 0', color: 'var(--neon-cyan)' }}>
+                      ALGORAND FOUNDATION - BALANCE SHEET RECONCILIATION
+                    </h1>
+                  </div>
+
+                  {/* Summary Boxes */}
+                  <div className="bs-summary-cards">
+                    <div className="summary-card bs-green-card">
+                      <div className="card-icon">Ⱥ</div>
+                      <div className="card-content">
+                        <span className="card-label">STARTING BALANCE (R4)</span>
+                        <span className="card-value">Ⱥ{(5347960000).toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div className="summary-card bs-yellow-card">
+                      <div className="card-icon">Ⱥ</div>
+                      <div className="card-content">
+                        <span className="card-label">CURRENT HOLDINGS (R18)</span>
+                        <span className="card-value">Ⱥ{(balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18 || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <div className="summary-card bs-red-card">
+                      <div className="card-icon">Ⱥ</div>
+                      <div className="card-content">
+                        <span className="card-label">HOLDINGS + DISTRIBUTED</span>
+                        <span className="card-value">Ⱥ{((Number(balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18) || 0) + summary.totalAlgoDistributed).toLocaleString()}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="summary-card bs-yellow-card">
-                    <div className="card-icon">Ⱥ</div>
-                    <div className="card-content">
-                      <span className="card-label">CURRENT HOLDINGS (R18)</span>
-                      <span className="card-value">Ⱥ{(balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18 || 0).toLocaleString()}</span>
-                    </div>
+
+                  <div className="data-note">
+                    <span className="note-icon">⚠</span>
+                    <p>{balanceSheetData.note}</p>
                   </div>
-                  <div className="summary-card bs-red-card">
-                    <div className="card-icon">Ⱥ</div>
-                    <div className="card-content">
-                      <span className="card-label">HOLDINGS + DISTRIBUTED</span>
-                      <span className="card-value">Ⱥ{((Number(balanceSheetData.singleFormat.find(p => p.name.includes('Holdings'))?.values.R18) || 0) + summary.totalAlgoDistributed).toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Report Filter */}
                 <div className="obs-filter-bar">
@@ -755,20 +769,6 @@ const Foundation: React.FC = () => {
                     {!hasIga333Access && '🔒 '}PNG
                   </button>
                 </div>
-
-                {/* Wrapper for PNG export */}
-                <div id="data-content">
-                  {/* PNG Export Title (hidden by default, shown during export) */}
-                  <div className="png-export-title">
-                    <h1 style={{ textAlign: 'center', margin: '20px 0', color: 'var(--neon-cyan)' }}>
-                      ALGORAND FOUNDATION - BALANCE SHEET RECONCILIATION
-                    </h1>
-                  </div>
-
-                  <div className="data-note">
-                    <span className="note-icon">⚠</span>
-                    <p>{balanceSheetData.note}</p>
-                  </div>
 
                   {/* Unified Balance Sheet Table */}
                   <div className="data-table-container">
@@ -1005,6 +1005,14 @@ const Foundation: React.FC = () => {
                   <h2 className="section-title">{outflowsData.title}</h2>
                 </div>
 
+                {/* Wrapper for PNG export - includes summary cards and table */}
+                <div id="outflows-content">
+                  {/* PNG Export Title (hidden by default, shown during export) */}
+                  <div className="png-export-title">
+                    <h1 style={{ textAlign: 'center', margin: '20px 0', color: 'var(--neon-cyan)' }}>
+                      ALGORAND FOUNDATION - ALL REPORTED OUTFLOWS
+                    </h1>
+                  </div>
 
                 {/* Outflows Grand Total Summary Box (matching summary page style) */}
                 <div className="summary-cards outflows-summary-cards">
@@ -1118,7 +1126,7 @@ const Foundation: React.FC = () => {
                   </button>
                   <button
                     className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
-                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-outflows') : handleLockedDownload()}
+                    onClick={() => hasIga333Access ? exportToPNG('outflows-content', 'algorand-foundation-outflows') : handleLockedDownload()}
                   >
                     {!hasIga333Access && '🔒 '}PNG
                   </button>
@@ -1259,6 +1267,7 @@ const Foundation: React.FC = () => {
                     </table>
                   </div>
                 </div>
+                </div> {/* Close outflows-content wrapper */}
               </div>
             );
             })()}
@@ -1269,6 +1278,15 @@ const Foundation: React.FC = () => {
                 <div className="section-header">
                   <h2 className="section-title">{fiatExpenseData.title}</h2>
                 </div>
+
+                {/* Wrapper for PNG export - includes summary cards, note, and main table */}
+                <div id="fiat-content">
+                  {/* PNG Export Title (hidden by default, shown during export) */}
+                  <div className="png-export-title">
+                    <h1 style={{ textAlign: 'center', margin: '20px 0', color: 'var(--neon-cyan)' }}>
+                      ALGORAND FOUNDATION - FIAT/USD EXPENSES
+                    </h1>
+                  </div>
 
                 {/* Summary Boxes */}
                 <div className="fiat-summary-cards">
@@ -1400,7 +1418,7 @@ const Foundation: React.FC = () => {
                   </button>
                   <button
                     className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
-                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-fiat-expense') : handleLockedDownload()}
+                    onClick={() => hasIga333Access ? exportToPNG('fiat-content', 'algorand-foundation-fiat-expense') : handleLockedDownload()}
                   >
                     {!hasIga333Access && '🔒 '}PNG
                   </button>
@@ -1551,6 +1569,7 @@ const Foundation: React.FC = () => {
                     </table>
                   </div>
                 </div>
+                </div> {/* Close fiat-content wrapper */}
 
                 {/* Crypto Crisis Losses */}
                 <div className="data-table-container crisis-section">
@@ -1637,6 +1656,15 @@ const Foundation: React.FC = () => {
                   <h2 className="section-title">LOANS TRACKING</h2>
                   <p className="section-description">All known loans issued by the Algorand Foundation</p>
                 </div>
+
+                {/* Wrapper for PNG export - includes stats cards, table, and legend */}
+                <div id="loans-content">
+                  {/* PNG Export Title (hidden by default, shown during export) */}
+                  <div className="png-export-title">
+                    <h1 style={{ textAlign: 'center', margin: '20px 0', color: 'var(--neon-cyan)' }}>
+                      ALGORAND FOUNDATION - LOANS TRACKING
+                    </h1>
+                  </div>
 
                 {/* Loans Stats Cards */}
                 {(() => {
@@ -1784,7 +1812,7 @@ const Foundation: React.FC = () => {
                   </button>
                   <button
                     className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
-                    onClick={() => hasIga333Access ? exportToPNG('data-content', 'algorand-foundation-loans') : handleLockedDownload()}
+                    onClick={() => hasIga333Access ? exportToPNG('loans-content', 'algorand-foundation-loans') : handleLockedDownload()}
                   >
                     {!hasIga333Access && '🔒 '}PNG
                   </button>
@@ -1876,6 +1904,7 @@ const Foundation: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                </div> {/* Close loans-content wrapper */}
               </div>
             )}
 

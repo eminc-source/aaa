@@ -127,35 +127,108 @@ export const exportToPNG = async (elementId: string, filename: string) => {
   }
 
   try {
-    // Hide download bar and purpose banner during capture
+    // Hide download bar, filter bar, purpose banner, and cross-check section during capture
     const downloadBars = element.querySelectorAll('.download-bar');
+    const filterBars = element.querySelectorAll('.obs-filter-bar');
     const purposeBanners = element.querySelectorAll('.purpose-banner');
     const exportTitles = element.querySelectorAll('.png-export-title');
-    
+    const crossCheckSections = element.querySelectorAll('.cross-check-section');
+
+    // Find all scrollable containers that might hide content
+    const scrollContainers = element.querySelectorAll('.table-scroll-wrapper, .data-table-container');
+
+    // Store original styles to restore later
+    const originalStyles = {
+      elementOverflow: element.style.overflow,
+      elementWidth: element.style.width,
+      elementMaxWidth: element.style.maxWidth,
+      containerStyles: Array.from(scrollContainers).map(container => ({
+        overflow: (container as HTMLElement).style.overflow,
+        maxWidth: (container as HTMLElement).style.maxWidth,
+        width: (container as HTMLElement).style.width,
+      })),
+    };
+
     downloadBars.forEach(bar => {
+      (bar as HTMLElement).style.display = 'none';
+    });
+    filterBars.forEach(bar => {
       (bar as HTMLElement).style.display = 'none';
     });
     purposeBanners.forEach(banner => {
       (banner as HTMLElement).style.display = 'none';
+    });
+    crossCheckSections.forEach(section => {
+      (section as HTMLElement).style.display = 'none';
     });
     // Show the export title during capture
     exportTitles.forEach(title => {
       (title as HTMLElement).style.display = 'block';
     });
 
+    // Temporarily remove overflow restrictions to capture full width
+    element.style.overflow = 'visible';
+    element.style.width = 'auto';
+    element.style.maxWidth = 'none';
+
+    // Remove overflow from scroll containers
+    scrollContainers.forEach(container => {
+      (container as HTMLElement).style.overflow = 'visible';
+      (container as HTMLElement).style.maxWidth = 'none';
+      (container as HTMLElement).style.width = 'auto';
+    });
+
+    // Wait for layout to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Calculate the actual full width needed by checking the table's bounding box
+    const table = element.querySelector('table');
+    const tableWidth = table ? table.getBoundingClientRect().width : 0;
+
+    // Use the actual content width to fit all columns
+    const captureWidth = Math.max(
+      tableWidth + 100, // Add padding for full table
+      element.scrollWidth,
+      table ? table.scrollWidth + 100 : 0,
+      1600 // Minimum width for tables with many columns
+    );
+
     const canvas = await html2canvas(element, {
       backgroundColor: '#1a1a2e',
-      scale: 2,
+      scale: 1.5, // Reduced from 2 to allow larger capture area while maintaining quality
       logging: false,
       useCORS: true,
+      scrollY: -window.scrollY,
+      scrollX: -window.scrollX,
+      windowWidth: captureWidth,
+      windowHeight: element.scrollHeight,
+    });
+
+    // Restore original styles
+    element.style.overflow = originalStyles.elementOverflow;
+    element.style.width = originalStyles.elementWidth;
+    element.style.maxWidth = originalStyles.elementMaxWidth;
+
+    // Restore scroll container styles
+    scrollContainers.forEach((container, index) => {
+      const styles = originalStyles.containerStyles[index];
+      (container as HTMLElement).style.overflow = styles.overflow;
+      (container as HTMLElement).style.maxWidth = styles.maxWidth;
+      (container as HTMLElement).style.width = styles.width;
     });
 
     // Restore visibility
     downloadBars.forEach(bar => {
       (bar as HTMLElement).style.display = '';
     });
+    filterBars.forEach(bar => {
+      (bar as HTMLElement).style.display = '';
+    });
     purposeBanners.forEach(banner => {
       (banner as HTMLElement).style.display = '';
+    });
+    crossCheckSections.forEach(section => {
+      (section as HTMLElement).style.display = '';
     });
     exportTitles.forEach(title => {
       (title as HTMLElement).style.display = '';

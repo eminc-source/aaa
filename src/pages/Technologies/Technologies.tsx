@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useWallet } from '@txnlab/use-wallet-react';
+import algosdk from 'algosdk';
 import { technologiesReports } from '../../data/technologiesReports';
 import { techBalanceSheetData, techReportColumns, getTechSubtotalIncentives, getTechSubtotalFinancial, getTechTotalDeployed } from '../../data/techBalanceSheetData';
 import { techOutflowsData, techOutflowReportColumns, getTechIncentivesSubtotal, getTechFinancialSubtotal, getTechIncentivesTotalAll, getTechFinancialTotalAll } from '../../data/techOutflowsData';
@@ -16,6 +18,8 @@ import './Technologies.css';
 type TabType = 'summary' | 'data' | 'charts' | 'flags';
 type DataSubTabType = 'holdings' | 'outflows' | 'loans' | 'pool-tracking';
 
+const IGA_ASA_ID = 2635992378;
+
 // Official Technologies report URLs by report number
 const techReportUrls: Record<number, string> = {
   1: 'https://algorand.com/resources/algorand-announcements/algorand-transparency-report',
@@ -28,6 +32,7 @@ const techReportUrls: Record<number, string> = {
 };
 
 const Technologies: React.FC = () => {
+  const { activeAccount } = useWallet();
   const [activeTab, setActiveTab] = useState<TabType>('summary');
   const [activeDataSubTab, setActiveDataSubTab] = useState<DataSubTabType>('holdings');
   const [reportSortDirection, setReportSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -35,8 +40,60 @@ const Technologies: React.FC = () => {
   const [flagsSeverityFilter, setFlagsSeverityFilter] = useState<Set<TechSeverity>>(new Set(['HIGH', 'INFO']));
   const [flagSortColumn, setFlagSortColumn] = useState<'issueNum' | 'category' | 'severity'>('issueNum');
   const [flagSortDirection, setFlagSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [igaBalance, setIgaBalance] = useState<number>(0);
+  const [showAccessModal, setShowAccessModal] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   const flagStats = getTechFlagStats();
+
+  // Check if user has iGA MEMBER status or higher (any iGA balance > 0)
+  const hasIgaMemberAccess = igaBalance > 0;
+
+  // Check if user has iGA 333 status or higher (iGA balance >= 0.333)
+  const hasIga333Access = igaBalance >= 333000; // 0.333 iGA in micro units
+
+  // Handle locked tab click - show access modal
+  const handleLockedTabClick = () => {
+    if (!hasIgaMemberAccess) {
+      setShowAccessModal(true);
+    }
+  };
+
+  // Handle locked download click - show download access modal
+  const handleLockedDownload = () => {
+    setShowDownloadModal(true);
+  };
+
+  // Fetch iGA balance when wallet connects
+  useEffect(() => {
+    const fetchIgaBalance = async () => {
+      if (!activeAccount?.address) {
+        setIgaBalance(0);
+        return;
+      }
+
+      try {
+        const algodClient = new algosdk.Algodv2('', 'https://mainnet-api.algonode.cloud', '');
+        const accountInfo = await algodClient.accountInformation(activeAccount.address).do();
+        const assets = accountInfo.assets ?? accountInfo['assets'] ?? [];
+
+        const igaAsset = assets.find((asset: any) => {
+          const assetId = asset['asset-id'] ?? asset['assetId'] ?? asset.assetId;
+          return Number(assetId) === IGA_ASA_ID;
+        });
+
+        const igaAmount = igaAsset ? (igaAsset.amount ?? igaAsset['amount']) : 0;
+        setIgaBalance(Number(igaAmount));
+      } catch (error) {
+        console.error('Failed to fetch iGA balance:', error);
+        setIgaBalance(0);
+      }
+    };
+
+    fetchIgaBalance();
+    const interval = setInterval(fetchIgaBalance, 30000);
+    return () => clearInterval(interval);
+  }, [activeAccount?.address]);
 
   // Severity colors for badges
   const severityColors: Record<TechSeverity, string> = {
@@ -136,22 +193,22 @@ const Technologies: React.FC = () => {
           <span className="tab-icon">▣</span> SUMMARY
         </button>
         <button
-          className={`tab-btn ${activeTab === 'data' ? 'active' : ''}`}
-          onClick={() => setActiveTab('data')}
+          className={`tab-btn ${activeTab === 'data' ? 'active' : ''} ${!hasIgaMemberAccess ? 'locked' : ''}`}
+          onClick={() => hasIgaMemberAccess ? setActiveTab('data') : handleLockedTabClick()}
         >
-          <span className="tab-icon">▦</span> DATA
+          <span className="tab-icon">{!hasIgaMemberAccess ? '🔒' : '▦'}</span> DATA
         </button>
         <button
-          className={`tab-btn ${activeTab === 'charts' ? 'active' : ''}`}
-          onClick={() => setActiveTab('charts')}
+          className={`tab-btn ${activeTab === 'charts' ? 'active' : ''} ${!hasIgaMemberAccess ? 'locked' : ''}`}
+          onClick={() => hasIgaMemberAccess ? setActiveTab('charts') : handleLockedTabClick()}
         >
-          <span className="tab-icon">▤</span> CHARTS
+          <span className="tab-icon">{!hasIgaMemberAccess ? '🔒' : '▤'}</span> CHARTS
         </button>
         <button
-          className={`tab-btn ${activeTab === 'flags' ? 'active' : ''}`}
-          onClick={() => setActiveTab('flags')}
+          className={`tab-btn ${activeTab === 'flags' ? 'active' : ''} ${!hasIgaMemberAccess ? 'locked' : ''}`}
+          onClick={() => hasIgaMemberAccess ? setActiveTab('flags') : handleLockedTabClick()}
         >
-          <span className="tab-icon">⚑</span> FLAGS
+          <span className="tab-icon">{!hasIgaMemberAccess ? '🔒' : '⚑'}</span> FLAGS
         </button>
       </nav>
 
@@ -357,8 +414,8 @@ const Technologies: React.FC = () => {
               <div className="download-bar">
                 <span className="download-label">DOWNLOAD:</span>
                 <button
-                  className="download-btn csv-btn"
-                  onClick={() => exportToCSV([
+                  className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                  onClick={() => hasIga333Access ? exportToCSV([
                     ...techBalanceSheetData.holdings.map(item => ({
                       'Section': 'Holdings',
                       'Metric': item.name,
@@ -394,13 +451,13 @@ const Technologies: React.FC = () => {
                       'Chg R6-R7': item.changeR6R7 ?? null,
                       'Notes': item.notes ?? ''
                     }))
-                  ], 'algorand-technologies-holdings')}
+                  ], 'algorand-technologies-holdings') : handleLockedDownload()}
                 >
-                  CSV
+                  {!hasIga333Access && '🔒 '}CSV
                 </button>
                 <button
-                  className="download-btn xls-btn"
-                  onClick={() => exportToExcel([
+                  className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                  onClick={() => hasIga333Access ? exportToExcel([
                     ...techBalanceSheetData.holdings.map(item => ({
                       'Section': 'Holdings',
                       'Metric': item.name,
@@ -436,13 +493,13 @@ const Technologies: React.FC = () => {
                       'Chg R6-R7': item.changeR6R7 ?? null,
                       'Notes': item.notes ?? ''
                     }))
-                  ], 'algorand-technologies-holdings', 'Holdings')}
+                  ], 'algorand-technologies-holdings', 'Holdings') : handleLockedDownload()}
                 >
-                  XLS
+                  {!hasIga333Access && '🔒 '}XLS
                 </button>
                 <button
-                  className="download-btn pdf-btn"
-                  onClick={() => exportToPDF([
+                  className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                  onClick={() => hasIga333Access ? exportToPDF([
                     ...techBalanceSheetData.holdings.map(item => ({
                       'Section': 'Holdings',
                       'Metric': item.name,
@@ -461,15 +518,15 @@ const Technologies: React.FC = () => {
                       ...Object.fromEntries(techReportColumns.map(col => [col, item.values[col]])),
                       'Chg R6-R7': item.changeR6R7 ?? null
                     }))
-                  ], 'algorand-technologies-holdings', 'ALGORAND TECHNOLOGIES - HOLDINGS TRACKING', `Generated ${new Date().toLocaleDateString()}`)}
+                  ], 'algorand-technologies-holdings', 'ALGORAND TECHNOLOGIES - HOLDINGS TRACKING', `Generated ${new Date().toLocaleDateString()}`) : handleLockedDownload()}
                 >
-                  PDF
+                  {!hasIga333Access && '🔒 '}PDF
                 </button>
                 <button
-                  className="download-btn png-btn"
-                  onClick={() => exportToPNG('tech-balance-content', 'algorand-technologies-holdings')}
+                  className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                  onClick={() => hasIga333Access ? exportToPNG('tech-balance-content', 'algorand-technologies-holdings') : handleLockedDownload()}
                 >
-                  PNG
+                  {!hasIga333Access && '🔒 '}PNG
                 </button>
               </div>
 
@@ -739,8 +796,8 @@ const Technologies: React.FC = () => {
                   <div className="download-bar">
                     <span className="download-label">DOWNLOAD:</span>
                     <button
-                      className="download-btn csv-btn"
-                      onClick={() => exportToCSV(
+                      className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToCSV(
                         techOutflowsData.categories.flatMap(cat =>
                           cat.items.map(item => ({
                             'Category': cat.name,
@@ -750,13 +807,13 @@ const Technologies: React.FC = () => {
                           }))
                         ),
                         'algorand-technologies-outflows'
-                      )}
+                      ) : handleLockedDownload()}
                     >
-                      CSV
+                      {!hasIga333Access && '🔒 '}CSV
                     </button>
                     <button
-                      className="download-btn xls-btn"
-                      onClick={() => exportToExcel(
+                      className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToExcel(
                         techOutflowsData.categories.flatMap(cat =>
                           cat.items.map(item => ({
                             'Category': cat.name,
@@ -767,13 +824,13 @@ const Technologies: React.FC = () => {
                         ),
                         'algorand-technologies-outflows',
                         'Outflows'
-                      )}
+                      ) : handleLockedDownload()}
                     >
-                      XLS
+                      {!hasIga333Access && '🔒 '}XLS
                     </button>
                     <button
-                      className="download-btn pdf-btn"
-                      onClick={() => exportToPDF(
+                      className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToPDF(
                         techOutflowsData.categories.flatMap(cat =>
                           cat.items.map(item => ({
                             'Category': cat.name,
@@ -785,15 +842,15 @@ const Technologies: React.FC = () => {
                         'algorand-technologies-outflows',
                         'ALGORAND TECHNOLOGIES - ALL REPORTED OUTFLOWS',
                         `Generated ${new Date().toLocaleDateString()}`
-                      )}
+                      ) : handleLockedDownload()}
                     >
-                      PDF
+                      {!hasIga333Access && '🔒 '}PDF
                     </button>
                     <button
-                      className="download-btn png-btn"
-                      onClick={() => exportToPNG('tech-outflows-content', 'algorand-technologies-outflows')}
+                      className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToPNG('tech-outflows-content', 'algorand-technologies-outflows') : handleLockedDownload()}
                     >
-                      PNG
+                      {!hasIga333Access && '🔒 '}PNG
                     </button>
                   </div>
 
@@ -942,8 +999,8 @@ const Technologies: React.FC = () => {
                   <div className="download-bar">
                     <span className="download-label">DOWNLOAD:</span>
                     <button
-                      className="download-btn csv-btn"
-                      onClick={() => exportToCSV([
+                      className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToCSV([
                         ...techLoansData.lendingEntries.map(item => ({
                           'Category': '3rd Party Lending',
                           'Borrower': item.borrower,
@@ -962,13 +1019,13 @@ const Technologies: React.FC = () => {
                           'Status': item.status,
                           'Notes': item.notes
                         }))
-                      ], 'algorand-technologies-loans')}
+                      ], 'algorand-technologies-loans') : handleLockedDownload()}
                     >
-                      CSV
+                      {!hasIga333Access && '🔒 '}CSV
                     </button>
                     <button
-                      className="download-btn xls-btn"
-                      onClick={() => exportToExcel([
+                      className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToExcel([
                         ...techLoansData.lendingEntries.map(item => ({
                           'Category': '3rd Party Lending',
                           'Borrower': item.borrower,
@@ -987,13 +1044,13 @@ const Technologies: React.FC = () => {
                           'Status': item.status,
                           'Notes': item.notes
                         }))
-                      ], 'algorand-technologies-loans', 'Loans')}
+                      ], 'algorand-technologies-loans', 'Loans') : handleLockedDownload()}
                     >
-                      XLS
+                      {!hasIga333Access && '🔒 '}XLS
                     </button>
                     <button
-                      className="download-btn pdf-btn"
-                      onClick={() => exportToPDF([
+                      className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToPDF([
                         ...techLoansData.lendingEntries.map(item => ({
                           'Category': 'Lending',
                           'Borrower': item.borrower,
@@ -1008,15 +1065,15 @@ const Technologies: React.FC = () => {
                           'Outstanding': item.outstanding,
                           'Status': item.status
                         }))
-                      ], 'algorand-technologies-loans', 'ALGORAND TECHNOLOGIES - LOANS TRACKING', `Generated ${new Date().toLocaleDateString()}`)}
+                      ], 'algorand-technologies-loans', 'ALGORAND TECHNOLOGIES - LOANS TRACKING', `Generated ${new Date().toLocaleDateString()}`) : handleLockedDownload()}
                     >
-                      PDF
+                      {!hasIga333Access && '🔒 '}PDF
                     </button>
                     <button
-                      className="download-btn png-btn"
-                      onClick={() => exportToPNG('tech-loans-content', 'algorand-technologies-loans')}
+                      className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToPNG('tech-loans-content', 'algorand-technologies-loans') : handleLockedDownload()}
                     >
-                      PNG
+                      {!hasIga333Access && '🔒 '}PNG
                     </button>
                   </div>
 
@@ -1184,8 +1241,8 @@ const Technologies: React.FC = () => {
                   <div className="download-bar">
                     <span className="download-label">DOWNLOAD:</span>
                     <button
-                      className="download-btn csv-btn"
-                      onClick={() => exportToCSV(techPoolTrackingData.map(period => ({
+                      className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToCSV(techPoolTrackingData.map(period => ({
                         'Period': period.period,
                         'Opening': period.opening,
                         'Distributions': period.distributions,
@@ -1194,13 +1251,13 @@ const Technologies: React.FC = () => {
                         'Calculated': period.calculated,
                         'Difference': period.difference,
                         'Notes': period.notes
-                      })), 'algorand-technologies-pool-tracking')}
+                      })), 'algorand-technologies-pool-tracking') : handleLockedDownload()}
                     >
-                      CSV
+                      {!hasIga333Access && '🔒 '}CSV
                     </button>
                     <button
-                      className="download-btn xls-btn"
-                      onClick={() => exportToExcel(techPoolTrackingData.map(period => ({
+                      className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToExcel(techPoolTrackingData.map(period => ({
                         'Period': period.period,
                         'Opening': period.opening,
                         'Distributions': period.distributions,
@@ -1209,13 +1266,13 @@ const Technologies: React.FC = () => {
                         'Calculated': period.calculated,
                         'Difference': period.difference,
                         'Notes': period.notes
-                      })), 'algorand-technologies-pool-tracking', 'Pool Tracking')}
+                      })), 'algorand-technologies-pool-tracking', 'Pool Tracking') : handleLockedDownload()}
                     >
-                      XLS
+                      {!hasIga333Access && '🔒 '}XLS
                     </button>
                     <button
-                      className="download-btn pdf-btn"
-                      onClick={() => exportToPDF(
+                      className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToPDF(
                         techPoolTrackingData.map(period => ({
                           'Period': period.period,
                           'Opening': period.opening,
@@ -1229,15 +1286,15 @@ const Technologies: React.FC = () => {
                         'algorand-technologies-pool-tracking',
                         'ALGORAND TECHNOLOGIES - POOL TRACKING',
                         `Generated ${new Date().toLocaleDateString()}`
-                      )}
+                      ) : handleLockedDownload()}
                     >
-                      PDF
+                      {!hasIga333Access && '🔒 '}PDF
                     </button>
                     <button
-                      className="download-btn png-btn"
-                      onClick={() => exportToPNG('tech-pool-tracking-content', 'algorand-technologies-pool-tracking')}
+                      className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                      onClick={() => hasIga333Access ? exportToPNG('tech-pool-tracking-content', 'algorand-technologies-pool-tracking') : handleLockedDownload()}
                     >
-                      PNG
+                      {!hasIga333Access && '🔒 '}PNG
                     </button>
                   </div>
 
@@ -1365,8 +1422,8 @@ const Technologies: React.FC = () => {
             <div className="download-bar">
               <span className="download-label">DOWNLOAD:</span>
               <button
-                className="download-btn csv-btn"
-                onClick={() => exportToCSV(
+                className={`download-btn csv-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToCSV(
                   sortedFlags.map(f => ({
                     '#': f.issueNum,
                     'Category': f.category,
@@ -1374,13 +1431,13 @@ const Technologies: React.FC = () => {
                     'Severity': f.severity
                   })),
                   'algorand-technologies-flags'
-                )}
+                ) : handleLockedDownload()}
               >
-                CSV
+                {!hasIga333Access && '🔒 '}CSV
               </button>
               <button
-                className="download-btn xls-btn"
-                onClick={() => exportToExcel(
+                className={`download-btn xls-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToExcel(
                   sortedFlags.map(f => ({
                     '#': f.issueNum,
                     'Category': f.category,
@@ -1389,13 +1446,13 @@ const Technologies: React.FC = () => {
                   })),
                   'algorand-technologies-flags',
                   'Flags'
-                )}
+                ) : handleLockedDownload()}
               >
-                XLS
+                {!hasIga333Access && '🔒 '}XLS
               </button>
               <button
-                className="download-btn pdf-btn"
-                onClick={() => exportToPDF(
+                className={`download-btn pdf-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToPDF(
                   sortedFlags.map(f => ({
                     '#': f.issueNum,
                     'Category': f.category,
@@ -1405,15 +1462,15 @@ const Technologies: React.FC = () => {
                   'algorand-technologies-flags',
                   'ALGORAND TECHNOLOGIES - FLAGS & OBSERVATIONS',
                   `Generated ${new Date().toLocaleDateString()}`
-                )}
+                ) : handleLockedDownload()}
               >
-                PDF
+                {!hasIga333Access && '🔒 '}PDF
               </button>
               <button
-                className="download-btn png-btn"
-                onClick={() => exportToPNG('tech-flags-content', 'algorand-technologies-flags')}
+                className={`download-btn png-btn ${!hasIga333Access ? 'locked' : ''}`}
+                onClick={() => hasIga333Access ? exportToPNG('tech-flags-content', 'algorand-technologies-flags') : handleLockedDownload()}
               >
-                PNG
+                {!hasIga333Access && '🔒 '}PNG
               </button>
             </div>
 
@@ -1467,6 +1524,56 @@ const Technologies: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Access Required Modal */}
+      {showAccessModal && (
+        <div className="access-modal-overlay" onClick={() => setShowAccessModal(false)}>
+          <div className="access-modal" onClick={e => e.stopPropagation()}>
+            <button className="access-modal-close" onClick={() => setShowAccessModal(false)}>✕</button>
+            <div className="access-modal-icon">🔒</div>
+            <h3 className="access-modal-title">ACCESS RESTRICTED</h3>
+            <p className="access-modal-text">
+              This content requires <span className="highlight">iGA MEMBER</span> status or higher.
+            </p>
+            <p className="access-modal-subtext">
+              Hold any amount of $iGA tokens to unlock full access to all data, charts, flags, and observations.
+            </p>
+            <a
+              href="https://hay.app/swap?asset_in=0&asset_out=2635992378&amount=1&referrer=VMSQFMHV4KGDTDQYT5YGZGCRV6VM7VQMDO2QM7DACMIXBYIJV2O474VQO4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="access-modal-btn"
+            >
+              GET $iGA TOKENS →
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Download Access Required Modal */}
+      {showDownloadModal && (
+        <div className="access-modal-overlay" onClick={() => setShowDownloadModal(false)}>
+          <div className="access-modal" onClick={e => e.stopPropagation()}>
+            <button className="access-modal-close" onClick={() => setShowDownloadModal(false)}>✕</button>
+            <div className="access-modal-icon">📥</div>
+            <h3 className="access-modal-title">DOWNLOAD RESTRICTED</h3>
+            <p className="access-modal-text">
+              Downloads require <span className="highlight">iGA 333</span> status or higher.
+            </p>
+            <p className="access-modal-subtext">
+              Hold at least 0.333 $iGA tokens to unlock download access for flags and detailed reports.
+            </p>
+            <a
+              href="https://hay.app/swap?asset_in=0&asset_out=2635992378&amount=1&referrer=VMSQFMHV4KGDTDQYT5YGZGCRV6VM7VQMDO2QM7DACMIXBYIJV2O474VQO4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="access-modal-btn"
+            >
+              GET $iGA TOKENS →
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

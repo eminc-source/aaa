@@ -1,7 +1,6 @@
 // Technologies Chart Data Sources - Aggregates all available data for charting
 import { techBalanceSheetData, techReportColumns } from './techBalanceSheetData';
 import { techOutflowsData, techOutflowReportColumns } from './techOutflowsData';
-import { techLoansData } from './techLoansData';
 
 export interface TechDataSeries {
   id: string;

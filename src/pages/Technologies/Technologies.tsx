@@ -13,6 +13,7 @@ import { exportToCSV, exportToExcel, exportToPDF, exportToPNG } from '../../util
 import WalletConnect from '../../components/WalletConnect/WalletConnect';
 import MemberStatus from '../../components/MemberStatus/MemberStatus';
 import TechChartBuilder from '../../components/TechChartBuilder/TechChartBuilder';
+import SEO from '../../components/SEO/SEO';
 import './Technologies.css';
 
 type TabType = 'summary' | 'data' | 'charts' | 'flags';
@@ -169,6 +170,11 @@ const Technologies: React.FC = () => {
 
   return (
     <div className="technologies-page">
+      <SEO
+        title="Algorand Technologies Transparency"
+        description="Track Algorand Technologies Inc ALGO distributions across 7 transparency reports. Analyze holdings, incentives, financial ecosystem, and pool tracking data."
+        path="/technologies"
+      />
       <header className="page-header technologies-header">
         <Link to="/" className="back-link">
           <span className="back-arrow">◄</span>

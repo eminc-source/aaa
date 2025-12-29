@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useWallet } from '@txnlab/use-wallet-react'
 import OrganizationCard from '../../components/OrganizationCard/OrganizationCard'
 import MusicPlayer from '../../components/MusicPlayer/MusicPlayer'
+import SEO from '../../components/SEO/SEO'
 import { OrganizationData } from '../../types'
 import { getTotalDataSeriesCount } from '../../data/chartDataSources'
 import { getTechTotalDataSeriesCount } from '../../data/techChartDataSources'
@@ -88,6 +89,11 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
+      <SEO
+        title="Dashboard"
+        description="Algo Account Ability - Track Algorand Foundation and Technologies ALGO distributions, transparency reports, and forensic analysis."
+        path="/"
+      />
       <div className="dashboard-header">
         <h2 className="section-title">
           <span className="title-decoration">◆</span>

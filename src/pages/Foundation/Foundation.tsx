@@ -14,6 +14,7 @@ import { keyObservationsData } from '../../data/keyObservationsData';
 import ChartBuilder from '../../components/ChartBuilder/ChartBuilder';
 import WalletConnect from '../../components/WalletConnect/WalletConnect';
 import MemberStatus from '../../components/MemberStatus/MemberStatus';
+import SEO from '../../components/SEO/SEO';
 import { exportToCSV, exportToExcel, exportToPDF, exportToPNG, formatSummaryReportsForExport, formatFlagsForExport, formatKeyObservationsForExport } from '../../utils/exportUtils';
 import './Foundation.css';
 
@@ -324,8 +325,13 @@ const Foundation: React.FC = () => {
 
   return (
     <div className="foundation-page">
+      <SEO
+        title="Algorand Foundation Transparency"
+        description="Track Algorand Foundation ALGO distributions across 18 transparency reports. Analyze balance sheets, outflows, loans, and pool tracking data."
+        path="/foundation"
+      />
       <div className="scanlines"></div>
-      
+
       {/* Header */}
       <header className="page-header foundation-header">
         <Link to="/" className="back-link">

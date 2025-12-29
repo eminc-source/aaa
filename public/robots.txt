@@ -1,0 +1,8 @@
+# robots.txt for Algo Account Ability
+# https://algoaccountability.com
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://algoaccountability.com/sitemap.xml

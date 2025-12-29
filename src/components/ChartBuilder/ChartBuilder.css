@@ -912,3 +912,86 @@
     padding: 12px 20px;
   }
 }
+
+/* =============================================
+   CHART EXPORT WRAPPER
+   Container for PNG export - contains chart + legend
+   ============================================= */
+
+.chart-export-wrapper {
+  position: relative;
+}
+
+/* Export legend - hidden on screen, shown during PNG export */
+.export-legend {
+  display: none;
+  background: var(--bg-darker);
+  border: 1px solid var(--foundation-secondary);
+  padding: 15px 20px;
+  margin-top: 15px;
+}
+
+.export-legend-title {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.55rem;
+  color: var(--foundation-primary);
+  text-shadow: 0 0 5px var(--foundation-primary);
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.export-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.export-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-legend-item .legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.export-legend-item .legend-name {
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.export-legend-item.calculated .legend-name {
+  color: var(--neon-magenta);
+}
+
+/* Interactive legend - visible on screen only */
+.selected-legend.no-export {
+  display: block;
+}
+
+/* PNG Export title in chart wrapper */
+.chart-export-wrapper .png-export-title {
+  display: none;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.chart-export-wrapper .png-export-title h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  color: var(--foundation-primary);
+  text-shadow: 0 0 10px var(--foundation-primary);
+  margin: 0 0 8px 0;
+}
+
+.chart-export-wrapper .png-export-title p {
+  font-family: 'VT323', monospace;
+  font-size: 1.2rem;
+  color: #ccc;
+  margin: 0;
+}

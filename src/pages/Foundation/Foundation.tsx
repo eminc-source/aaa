@@ -2223,7 +2223,7 @@ const Foundation: React.FC = () => {
           <div className="charts-tab" id="charts-content">
             <ChartBuilder
               hasIga333Access={hasIga333Access}
-              onDownloadChart={() => exportToPNG('charts-content', 'algorand-foundation-chart')}
+              onDownloadChart={() => exportToPNG('chart-export-content', 'algorand-foundation-chart')}
               onLockedDownload={handleLockedDownload}
             />
           </div>

@@ -596,16 +596,51 @@ const TechChartBuilder: React.FC<TechChartBuilderProps> = ({
           )}
         </div>
 
-        {/* Chart Display */}
-        <div className="chart-container">
-          <div className="chart-wrapper">
-            {renderChart()}
+        {/* Chart Display and Export Legend - wrapped for PNG export */}
+        <div id="tech-chart-export-content" className="chart-export-wrapper">
+          {/* PNG Export Title (hidden by default, shown during export) */}
+          <div className="png-export-title">
+            <h1>ALGORAND TECHNOLOGIES</h1>
+            <p>TRANSPARENCY DATA CHART</p>
           </div>
+
+          <div className="chart-container">
+            <div className="chart-wrapper">
+              {renderChart()}
+            </div>
+          </div>
+
+          {/* Export Legend - simplified for PNG export */}
+          {allActiveSeries.length > 0 && (
+            <div className="export-legend">
+              <div className="export-legend-title">DATA SERIES</div>
+              <div className="export-legend-items">
+                {selectedSeries.map(series => (
+                  <div key={series.id} className="export-legend-item">
+                    <span
+                      className="legend-color"
+                      style={{ backgroundColor: series.color }}
+                    />
+                    <span className="legend-name">{series.name}</span>
+                  </div>
+                ))}
+                {calculatedSeriesList.map(calc => (
+                  <div key={calc.id} className="export-legend-item calculated">
+                    <span
+                      className="legend-color"
+                      style={{ backgroundColor: calc.color }}
+                    />
+                    <span className="legend-name">{calc.name} ({getSeriesNameById(calc.operandA)} {getOperatorSymbol(calc.operator)} {getSeriesNameById(calc.operandB)})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Selected Series Legend */}
+        {/* Selected Series Legend - interactive version (hidden in export) */}
         {allActiveSeries.length > 0 && (
-          <div className="selected-legend">
+          <div className="selected-legend no-export">
             <div className="legend-header">
               <h4>ACTIVE SERIES</h4>
               {selectedSeries.length >= 2 && (

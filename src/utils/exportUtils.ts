@@ -134,6 +134,10 @@ export const exportToPNG = async (elementId: string, filename: string) => {
     const exportTitles = element.querySelectorAll('.png-export-title');
     const crossCheckSections = element.querySelectorAll('.cross-check-section');
 
+    // Chart-specific elements: show export legend, hide interactive legend
+    const exportLegends = element.querySelectorAll('.export-legend');
+    const interactiveLegends = element.querySelectorAll('.selected-legend.no-export');
+
     // Find all scrollable containers that might hide content
     const scrollContainers = element.querySelectorAll('.table-scroll-wrapper, .data-table-container');
 
@@ -164,6 +168,13 @@ export const exportToPNG = async (elementId: string, filename: string) => {
     // Show the export title during capture
     exportTitles.forEach(title => {
       (title as HTMLElement).style.display = 'block';
+    });
+    // Show export legend and hide interactive legend for chart exports
+    exportLegends.forEach(legend => {
+      (legend as HTMLElement).style.display = 'block';
+    });
+    interactiveLegends.forEach(legend => {
+      (legend as HTMLElement).style.display = 'none';
     });
 
     // Temporarily remove overflow restrictions to capture full width
@@ -232,6 +243,13 @@ export const exportToPNG = async (elementId: string, filename: string) => {
     });
     exportTitles.forEach(title => {
       (title as HTMLElement).style.display = '';
+    });
+    // Restore chart legend visibility
+    exportLegends.forEach(legend => {
+      (legend as HTMLElement).style.display = '';
+    });
+    interactiveLegends.forEach(legend => {
+      (legend as HTMLElement).style.display = '';
     });
 
     canvas.toBlob((blob) => {

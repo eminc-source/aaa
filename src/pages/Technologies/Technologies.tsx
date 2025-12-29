@@ -1357,7 +1357,7 @@ const Technologies: React.FC = () => {
         {activeTab === 'charts' && (
           <div className="charts-tab" id="tech-charts-content">
             <TechChartBuilder
-              onDownloadChart={() => exportToPNG('tech-charts-content', 'algorand-technologies-chart')}
+              onDownloadChart={() => exportToPNG('tech-chart-export-content', 'algorand-technologies-chart')}
             />
           </div>
         )}

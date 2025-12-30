@@ -2393,7 +2393,7 @@ const Foundation: React.FC = () => {
               This content requires <span className="highlight">iGA MEMBER</span> status or higher.
             </p>
             <p className="access-modal-subtext">
-              Hold any amount of $iGA tokens to unlock full access to all data, charts, flags, and observations.
+              Connect your wallet and hold any amount of $iGA tokens to unlock full access to all data, charts, flags, and observations.
             </p>
             <a 
               href="https://hay.app/swap?asset_in=0&asset_out=2635992378&amount=1&referrer=VMSQFMHV4KGDTDQYT5YGZGCRV6VM7VQMDO2QM7DACMIXBYIJV2O474VQO4" 
@@ -2418,7 +2418,7 @@ const Foundation: React.FC = () => {
               Downloads require <span className="highlight">iGA 333</span> status or higher.
             </p>
             <p className="access-modal-subtext">
-              Hold at least 0.333 $iGA tokens to unlock download access for flags and detailed reports.
+              Connect your wallet and hold at least 0.333 $iGA tokens to unlock download access for flags and detailed reports.
             </p>
             <a 
               href="https://hay.app/swap?asset_in=0&asset_out=2635992378&amount=1&referrer=VMSQFMHV4KGDTDQYT5YGZGCRV6VM7VQMDO2QM7DACMIXBYIJV2O474VQO4" 

@@ -84,6 +84,13 @@ const WalletConnect = () => {
                 <span className="connecting-dots">...</span>
               </div>
             )}
+
+            <div className="wallet-help">
+              <p>Don't have a wallet? Create an Algorand Wallet at:</p>
+              <a href="https://www.igetalgo.com/algorand/ecosystem" target="_blank" rel="noopener noreferrer" className="wallet-help-link">
+                iGetAlgo.com
+              </a>
+            </div>
           </div>
         </div>
       )}

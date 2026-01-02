@@ -7,7 +7,7 @@ interface SEOProps {
   image?: string;
 }
 
-const BASE_URL = 'https://algoaccountability.com';
+const BASE_URL = 'https://algoaa.com';
 const DEFAULT_TITLE = 'AAA - Algo Account Ability | Algorand Transparency Dashboard';
 const DEFAULT_DESCRIPTION = 'Track Algorand Foundation & Technologies ALGO distributions with forensic analysis. Interactive charts, data exports, and transparency report tracking.';
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
